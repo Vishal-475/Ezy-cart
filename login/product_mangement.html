@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Product Management</h1>
+        <nav>
+            <a href="admin_dashboard.html">Dashboard</a>
+            <a href="orders.html">Orders</a>
+            <a href="product_management.html">Products</a>
+            <a href="reports.html">Reports</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Manage Products</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="products-table">
+                    <!-- Products will be dynamically loaded -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        const products = [
+            { id: 1, name: 'Apple', price: 30 },
+            { id: 2, name: 'Orange', price: 20 }
+        ];
+
+        const productsTable = document.getElementById('products-table');
+        products.forEach(product => {
+            const row = `
+                <tr>
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>₹${product.price}</td>
+                    <td>
+                        <button onclick="editProduct(${product.id})">Edit</button>
+                        <button onclick="deleteProduct(${product.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            productsTable.innerHTML += row;
+        });
+
+        function editProduct(productId) {
+            alert(`Editing product ${productId}`);
+        }
+
+        function deleteProduct(productId) {
+            alert(`Deleting product ${productId}`);
+        }
+
+        function logout() {
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

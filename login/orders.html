@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Orders Management</h1>
+        <nav>
+            <a href="admin_dashboard.html">Dashboard</a>
+            <a href="orders.html">Orders</a>
+            <a href="product_ma.html">Products</a>
+            <a href="reports.html">Reports</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Orders</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table">
+                    <!-- Orders will be dynamically loaded -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        const orders = [
+            { id: 1, customer: 'John Doe', items: 5, status: 'Pending' },
+            { id: 2, customer: 'Jane Smith', items: 3, status: 'Shipped' }
+        ];
+
+        const ordersTable = document.getElementById('orders-table');
+        orders.forEach(order => {
+            const row = `
+                <tr>
+                    <td>${order.id}</td>
+                    <td>${order.customer}</td>
+                    <td>${order.items}</td>
+                    <td>${order.status}</td>
+                    <td>
+                        <button onclick="updateOrderStatus(${order.id}, 'Approved')">Approve</button>
+                        <button onclick="updateOrderStatus(${order.id}, 'Declined')">Decline</button>
+                    </td>
+                </tr>
+            `;
+            ordersTable.innerHTML += row;
+        });
+
+        function updateOrderStatus(orderId, status) {
+            alert(`Order ${orderId} marked as ${status}`);
+            // Update status logic here
+        }
+
+        function logout() {
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

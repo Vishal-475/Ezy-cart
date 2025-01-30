@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVMG THE DAILY BASKET - Checkout</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="img/logo/cart.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Checkout</h1>
+    </header>
+    <main>
+        <section class="checkout-container">
+            <div class="contact-details">
+                <h2>Contact Information : </h2>
+                <p>Email: allsupport@svmgthedailybasket.com</p>
+                <p>Phone: +91 7904656748</p>
+                <p>Address: Building 8, Starlight Square, Celestial Drive, 901567</p>
+                <P>  Follow us on :  
+                    <img src="img/logo/instagram.png" alt="Instagram" width="6%"> 
+                    <img src="img/logo/facebook.png" alt="Facebook" width="6%"> 
+                    <img src="img/logo/twitter.png" alt="X" width="6%"> 
+                    <img src="img/logo/youtube.png" alt="Youtube" width="6%">
+                </P>
+            </div>
+            <form id="checkout-form" onsubmit="placeOrder(event)">
+                <h2>Shipping & Payment Details</h2>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contact Number:</label>
+                    <input type="tel" id="contact" required>
+                </div>
+                <div class="form-group">
+                    <label for="payment">Payment Method:</label>
+                    <select id="payment" onchange="toggleQRCode()">
+                        <option value="credit">Credit Card</option>
+                        <option value="upi">UPI</option>
+                    </select>
+                </div>
+                <div id="qr-code-section" class="qr-code-section" style="display: none;">
+                    <p>Scan this QR Code to pay via UPI:</p>
+                    <canvas id="qr-code"></canvas>
+                    <p><strong>Amount: ₹<span id="amount-display">0.00</span></strong></p>
+                </div>
+                <button type="submit">Place Order</button>
+            </form>
+        </section>
+
+        <!-- Invoice Modal -->
+        <div id="invoice-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal()">&times;</span>
+                <section id="invoice-section">
+                    <h2>Invoice</h2>
+                    <div class="invoice-header">
+                        <p><strong>S V M G Supermarket</strong></p>
+                        <p>Building 8, Starlight Square, Celestial Drive, 901567</p>
+                        <p>Tel: +91 7904656748</p>
+                        <p>Invoice #: <span id="invoice-number"></span></p>
+                        <p>Date: <span id="invoice-date"></span></p>
+                    </div>
+                    <hr>
+                    <p><strong>Name:</strong> <span id="invoice-name"></span></p>
+                    <p><strong>Address:</strong> <span id="invoice-address"></span></p>
+                    <p><strong>Contact Number:</strong> <span id="invoice-contact"></span></p>
+                    <p><strong>Payment Method:</strong> 79046<span id="invoice-payment"></span></p>
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-products"></tbody>
+                    </table>
+                    <hr>
+                    <div class="invoice-footer">
+                        <p><strong>Subtotal:</strong> ₹<span id="invoice-subtotal"></span></p>
+                        <p><strong>Tax (5%):</strong> ₹<span id="invoice-tax"></span></p>
+                        <p><strong>Total Amount Paid:</strong> ₹<span id="invoice-amount"></span></p>
+                    </div>
+                    <p><strong>Order Status:</strong> Confirmed</p>
+                </section>
+            </div>
+        </div>
+
+        <button onclick="logout()" class="logout-button">Logout</button>
+    </main>
+
+    <script>
+        const cart = JSON.parse(localStorage.getItem('cart')) || []; // Retrieve cart data from localStorage
+        const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0); // Calculate subtotal
+        const tax = subtotal * 0.05; // Calculate tax (5%)
+        const totalAmount = subtotal + tax; // Calculate total amount
+
+        if (!sessionStorage.getItem('username')) {
+            window.location.href = 'login.html';
+        }
+
+        function toggleQRCode() {
+            const paymentMethod = document.getElementById('payment').value;
+            const qrSection = document.getElementById('qr-code-section');
+            const amountDisplay = document.getElementById('amount-display');
+
+            if (paymentMethod === 'upi') {
+                qrSection.style.display = 'block';
+                amountDisplay.textContent = totalAmount.toFixed(2);
+
+                // Generate QR Code
+                const qrCodeCanvas = document.getElementById('qr-code');
+                const upiUrl = `upi://pay?pa=cool.vichuvishal4@oksbi&pn= S V M G supermarket&am=${totalAmount}&cu=INR`;
+                QRCode.toCanvas(qrCodeCanvas, upiUrl, function (error) {
+                    if (error) console.error(error);
+                });
+            } else {
+                qrSection.style.display = 'none';
+            }
+        }
+
+        function placeOrder(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const contact = document.getElementById('contact').value;
+            const paymentMethod = document.getElementById('payment').value;
+
+            if (paymentMethod === 'upi') {
+                const userConfirmed = confirm('Have you completed the UPI payment?');
+                if (!userConfirmed) {
+                    alert('Please complete the payment to proceed.');
+                    return;
+                }
+            }
+
+            // Display Invoice
+            document.getElementById('invoice-name').textContent = name;
+            document.getElementById('invoice-address').textContent = address;
+            document.getElementById('invoice-contact').textContent = contact;
+            document.getElementById('invoice-payment').textContent = paymentMethod === 'upi' ? 'UPI' : 'Credit Card';
+            document.getElementById('invoice-subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('invoice-tax').textContent = tax.toFixed(2);
+            document.getElementById('invoice-amount').textContent = totalAmount.toFixed(2);
+
+            const invoiceProducts = document.getElementById('invoice-products');
+            invoiceProducts.innerHTML = '';
+            cart.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+                `;
+                invoiceProducts.appendChild(row);
+            });
+
+            // Generate unique invoice number and date
+            document.getElementById('invoice-number').textContent = `INV-${Date.now()}`;
+            document.getElementById('invoice-date').textContent = new Date().toLocaleString();
+
+            // Clear cart data
+            localStorage.removeItem('cart');
+
+            // Show modal
+            document.getElementById('invoice-modal').style.display = 'block';
+
+            alert('Order placed successfully!');
+        }
+
+        function closeModal() {
+            document.getElementById('invoice-modal').style.display = 'none';
+        }
+
+        function logout() {
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('role');
+            localStorage.removeItem('cart');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
