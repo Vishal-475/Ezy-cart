@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Reports</h1>
+        <nav>
+            <a href="admin_dashboard.html">Dashboard</a>
+            <a href="orders.html">Orders</a>
+            <a href="product_management.html">Products</a>
+            <a href="reports.html">Reports</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Sales Reports</h2>
+            <p>Total Revenue: ₹45,000</p>
+            <p>Orders Processed: 150</p>
+        </section>
+    </main>
+    <script>
+        function logout() {
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

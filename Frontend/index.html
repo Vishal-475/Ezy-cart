@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVMG THE DAILY BASKET - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="supermarket-website/assets/logo/cart.png">
+    <!-- Google Font: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Body and background */
+
+
+        /* Header Section */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #08b91f;
+            transform: scale(1.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 150px 30px 50px;
+            background-image: url('assets/img/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            position: relative;
+        }
+
+        .hero h2 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: fadeIn 2s ease-in-out;
+            color: #fff;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7); /* Added text shadow */
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            animation: fadeIn 3s ease-in-out;
+            color: #fff;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7); /* Added text shadow */
+        }
+
+        .hero button {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border: none;
+            background-color: #00bfae;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .hero button:hover {
+            background-color: #009c8c;
+        }
+
+        /* Promotions Section */
+        .promotions {
+            padding: 50px 30px;
+            text-align: center;
+        }
+
+        .promotions h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+
+
+        .promotion-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .promotion-item img {
+            width: 100%;
+            border-radius: 8px;
+            max-height: 250px;
+            object-fit: cover;
+        }
+
+        /* Categories Section */
+        .categories {
+            padding: 50px 30px;
+            background-color: #3cbd4d;
+            text-align: center;
+        }
+
+        .categories h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .category-item {
+            background-color: #8ec998;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .category-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-item img {
+            width: 80%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Footer Section */
+        footer {
+            background-color: #004d4d;
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        footer a {
+            color: #00bfae;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Cart Count Badge */
+        .cart-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Keyframe Animation for fadeIn */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SVMG THE DAILY BASKET</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="categories.html">Categories</a>
+            <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
+            <a href="checkout.html">Checkout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h2>Your One-Stop Shop for Fresh Groceries</h2>
+            <p>Discover the best deals on fresh produce, dairy, meats, and more!</p>
+            <button onclick="location.href='categories.html'">Shop Now</button>
+        </section>
+
+        <section class="promotions">
+            <h2>Current Promotions</h2>
+            <div class="promotion-item">
+                <h3>Weekly Deals</h3>
+                <p>Save up to 30% on selected items every week!</p>
+                <img src="/assets/img/offer.png" alt="Weekly Deals">
+            </div>
+            <div class="promotion-item">
+                <h3>Fresh Arrival</h3>
+                <p>Check out our new arrivals of organic produce!</p>
+                <img src="/assets/img/org.png" alt="Fresh Arrival">
+            </div>
+            <div class="promotion-item">
+                <h3>Seasonal Discounts</h3>
+                <p>Enjoy seasonal discounts on fruits and vegetables!</p>
+                <img src="/assets/img/dis.png" alt="Seasonal Discounts">
+            </div>
+        </section>
+
+        <section class="categories">
+            <h2>Explore Our Categories</h2>
+            <div class="category-grid">
+                <div class="category-item">
+                    <h3>Fruits & Vegetables</h3>
+                    <p>Fresh and organic produce sourced locally.</p>
+                    <img src="\assets\img\fruits .png" alt="Fruits & Vegetables">
+                </div>
+                <div class="category-item">
+                    <h3>Dairy Products</h3>
+                    <p>Delicious dairy products for every meal.</p>
+                    <img src="/assets/img/dairy .png" alt="Dairy Products">
+                </div>
+                <div class="category-item">
+                    <h3>Beverages</h3>
+                    <p>Refresh yourself with our variety of drinks.</p>
+                    <img src="/assets/img/brevarage.png" alt="Beverages">
+                </div>
+                <div class="category-item">
+                    <h3>Snacks</h3>
+                    <p>Perfect snacks for every occasion!</p>
+                    <img src="/assets/img/sna.png" alt="Snacks">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

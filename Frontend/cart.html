@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVMG THE DAILY BASKET - Cart</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="img/logo/cart.png">
+
+</head>
+<body>
+    <header>
+        <h1>Your Shopping Cart</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="checkout.html">Checkout</a>
+        </nav>
+    </header>
+    <main>
+        <section id="cart">
+            <h2>Your Cart</h2>
+            <table id="cart-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Subtotal (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items">
+                    <!-- Items will be added here dynamically -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">Total Price:</td>
+                        <td>₹<span id="total-price">0.00</span></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <button id="checkout-button" onclick="checkout()">Proceed to Checkout</button>
+        </section>
+    </main>
+    <script>
+        const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function renderCart() {
+            const cartTable = document.getElementById('cart-items');
+            const totalPriceEl = document.getElementById('total-price');
+            let totalPrice = 0;
+
+            cartTable.innerHTML = '';
+            cartItems.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.price.toFixed(2)}</td>
+                    <td>${(item.quantity * item.price).toFixed(2)}</td>
+                `;
+                cartTable.appendChild(row);
+                totalPrice += item.quantity * item.price;
+            });
+            totalPriceEl.textContent = totalPrice.toFixed(2);
+        }
+
+        function checkout() {
+            if (cartItems.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            window.location.href = 'checkout.html';
+        }
+
+        renderCart();
+    </script>
+</body>
+</html>
