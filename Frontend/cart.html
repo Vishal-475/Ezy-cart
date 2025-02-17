@@ -5,8 +5,170 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVMG THE DAILY BASKET - Cart</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="img/logo/cart.png">
+    <link rel="icon" href="/assets/logo/cart.png">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
 
+        header {
+            background-color: #1f2e20;
+            color: #ffffff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1rem;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 2rem;
+        }
+
+        .cart-section {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .cart-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1f2e20;
+        }
+
+        #cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        #cart-table th, #cart-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #cart-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        #cart-table tfoot {
+            font-weight: bold;
+        }
+
+        .cart-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-actions button {
+            padding: 0.75rem 1.5rem;
+            background-color: #42b83e;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .cart-actions button:hover {
+            background-color: #42b83e;
+        }
+
+        .quantity-adjust {
+            display: inline-flex;
+            gap: 0.5rem;
+        }
+
+        .quantity-adjust button {
+            padding: 0.5rem 1rem;
+            background-color: #42b83e;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .quantity-adjust button:hover {
+            background-color: #42b83e;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .cart-item-actions button {
+            padding: 0.5rem 1rem;
+            background-color: #42b83e;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .cart-item-actions button:hover {
+            background-color: #42b83e;
+        }
+
+        footer {
+            background-color: #1f2e20;
+            color: #ffffff;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav {
+                margin-top: 1rem;
+            }
+
+            .cart-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cart-actions button {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -16,8 +178,9 @@
             <a href="checkout.html">Checkout</a>
         </nav>
     </header>
+
     <main>
-        <section id="cart">
+        <section class="cart-section">
             <h2>Your Cart</h2>
             <table id="cart-table">
                 <thead>
@@ -26,6 +189,7 @@
                         <th>Quantity</th>
                         <th>Unit Price (₹)</th>
                         <th>Subtotal (₹)</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="cart-items">
@@ -33,14 +197,22 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3">Total Price:</td>
+                        <td colspan="4">Total Price:</td>
                         <td>₹<span id="total-price">0.00</span></td>
                     </tr>
                 </tfoot>
             </table>
-            <button id="checkout-button" onclick="checkout()">Proceed to Checkout</button>
+            <div class="cart-actions">
+                <button id="checkout-button" onclick="checkout()">Proceed to Checkout</button>
+                <button id="clear-cart-button" onclick="clearCart()">Clear Cart</button>
+            </div>
         </section>
     </main>
+
+    <footer>
+        <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
+    </footer>
+
     <script>
         const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
 
@@ -50,13 +222,22 @@
             let totalPrice = 0;
 
             cartTable.innerHTML = '';
-            cartItems.forEach(item => {
+            cartItems.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.name}</td>
-                    <td>${item.quantity}</td>
+                    <td>
+                        <div class="quantity-adjust">
+                            <button onclick="adjustQuantity(${index}, -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="adjustQuantity(${index}, 1)">+</button>
+                        </div>
+                    </td>
                     <td>${item.price.toFixed(2)}</td>
                     <td>${(item.quantity * item.price).toFixed(2)}</td>
+                    <td>
+                        <button class="cart-item-actions" onclick="removeItem(${index})">Remove</button>
+                    </td>
                 `;
                 cartTable.appendChild(row);
                 totalPrice += item.quantity * item.price;
@@ -72,7 +253,31 @@
             window.location.href = 'checkout.html';
         }
 
-        renderCart();
+        function clearCart() {
+            if (confirm('Are you sure you want to clear the cart?')) {
+                localStorage.removeItem('cart');
+                cartItems.length = 0;
+                renderCart();
+            }
+        }
+
+        function removeItem(index) {
+            cartItems.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cartItems));
+            renderCart();
+        }
+
+        function adjustQuantity(index, adjustment) {
+            if (cartItems[index].quantity + adjustment > 0) {
+                cartItems[index].quantity += adjustment;
+                localStorage.setItem('cart', JSON.stringify(cartItems));
+                renderCart();
+            } else {
+                alert('Quantity cannot be less than 1');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderCart);
     </script>
 </body>
 </html>

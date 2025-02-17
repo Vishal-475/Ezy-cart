@@ -9,6 +9,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
+        /* Updated Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -17,82 +18,188 @@
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
         }
-
+    
         .modal-content {
-            background-color: #fff;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
+            background: white;
+            margin: 5% auto;
             width: 80%;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.3s;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
         }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+    
+        @keyframes slideIn {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+    
+        .invoice-header {
+            background: #f37254;
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
         }
-
-        @keyframes fadeIn {
-            from {opacity: 0;}
-            to {opacity: 1;}
+    
+        .invoice-header img {
+            width: 80px;
+            margin-bottom: 15px;
         }
-
-        .cart-summary {
-            margin-bottom: 20px;
+    
+        .invoice-details {
+            padding: 25px;
         }
-
-        .cart-summary table {
+    
+        .invoice-table {
             width: 100%;
+            margin: 20px 0;
             border-collapse: collapse;
         }
-
-        .cart-summary th, .cart-summary td {
-            border: 1px solid #ddd;
-            padding: 8px;
+    
+        .invoice-table th {
+            background: #f8f9fa;
+            padding: 12px;
             text-align: left;
         }
-
-        .cart-summary th {
-            background-color: #f2f2f2;
+    
+        .invoice-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
         }
-
-        .coupon-section {
-            margin-bottom: 20px;
+    
+        .invoice-totals {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
         }
-
-        .coupon-section input {
-            padding: 8px;
-            width: 200px;
-            margin-right: 10px;
+    
+        .invoice-totals p {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
         }
-
-        .coupon-section button {
-            padding: 8px 12px;
-            background-color: #f37254;
+    
+        .status-badge {
+            background: #4CAF50;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 15px;
         }
-
-        .coupon-section button:hover {
-            background-color: #e65a3a;
+    
+        .close-button {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+    
+        .close-button:hover {
+            transform: scale(1.2);
+        }
+    
+        .download-section {
+            text-align: center;
+            margin-top: 25px;
+        }
+    
+        .download-btn {
+            background: #f37254;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background 0.3s;
+        }
+    
+        .download-btn:hover {
+            background: #e65a3a;
         }
     </style>
+    
+    <!-- Updated Invoice Modal -->
+    <div id="invoice-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <div class="invoice-header">
+                <img src="/assets/logo/cart.png" alt="Company Logo">
+                <h2>Payment Successful! 🎉</h2>
+                <p>Thank you for your purchase!</p>
+            </div>
+            
+            <div class="invoice-details">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div>
+                        <h3>Bill To:</h3>
+                        <p id="invoice-name"></p>
+                        <p id="invoice-address"></p>
+                        <p id="invoice-contact"></p>
+                    </div>
+                    <div>
+                        <p><strong>Invoice #:</strong> <span id="invoice-number"></span></p>
+                        <p><strong>Date:</strong> <span id="invoice-date"></span></p>
+                        <p><strong>Payment Method:</strong> <span id="invoice-payment"></span></p>
+                    </div>
+                </div>
+    
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-products"></tbody>
+                </table>
+    
+                <div class="invoice-totals">
+                    <p><span>Subtotal:</span> <span>₹<span id="invoice-subtotal"></span></span></p>
+                    <p><span>Tax (5%):</span> <span>₹<span id="invoice-tax"></span></span></p>
+                    <p style="font-weight: bold; font-size: 1.2em;">
+                        <span>Total Paid:</span> <span>₹<span id="invoice-amount"></span></span>
+                    </p>
+                </div>
+    
+                <div class="status-badge">Order Confirmed ✔</div>
+    
+                <div class="download-section">
+                    <button class="download-btn" onclick="printInvoice()">Download Invoice</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function printInvoice() {
+            window.print();
+        }
+    
+        // Add this to your existing placeOrder function
+        function placeOrder(event) {
+            event.preventDefault();
+            // ... existing order processing code ...
+            
+            // Show modal after processing
+            document.getElementById('invoice-modal').style.display = 'block';
+            
+            // Clear cart after showing invoice
+            localStorage.removeItem('cart');
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -106,10 +213,10 @@
                 <p>Phone: +91 7904656748</p>
                 <p>Address: Building 8, Starlight Square, Celestial Drive, 901567</p>
                 <P>  Follow us on :  
-                    <img src="/assets/" alt="Instagram" width="6%"> 
+                    <img src="/assets/logo/instagram.png" alt="Instagram" width="6%"> 
                     <img src="/assets/logo/facebook.png" alt="Facebook" width="6%"> 
                     <img src="/assets/logo/twitter.png" alt="X" width="6%"> 
-                    <img src="assets/logo/youtube.png" alt="Youtube" width="6%">
+                    <img src="/assets/logo/youtube.png" alt="Youtube" width="6%">
                 </P>
             </div>
 
