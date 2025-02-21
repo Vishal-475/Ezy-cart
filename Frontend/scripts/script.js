@@ -171,7 +171,3 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentElement.addEventListener('change', toggleQRCode);
     }
 });
-
-
-
-

@@ -11,33 +11,8 @@ body {
     background-color: #88a29c;
     color: #12240a;
 }
-*/
 
-/* Header 
-header {
-    background-color: #000501; 
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-header h1 {
-    margin: 0;
-}
-
-header nav a {
-    margin: 0 10px;
-    color: #fff;
-    text-decoration: none;
-}
-
-header nav a:hover {
-    text-decoration: underline;
-}*/
-
-/* Main Section */
-/* Add this CSS to style.css or within a <style> tag in the HTML file */
-
+/* Header */
 header {
     display: flex;
     justify-content: space-between;
@@ -55,8 +30,8 @@ header h1 {
 
 nav {
     display: flex;
-    gap: 15px; /* Adds spacing between links */
-    margin-left: auto; /* Pushes the nav links to the right */
+    gap: 15px;
+    margin-left: auto;
 }
 
 nav a {
@@ -71,17 +46,18 @@ nav a:hover {
     color: #0056b3;
 }
 
+/* Main Section */
 main {
-    max-width: 1200px; /* Adjusted max-width for a wider layout */
+    max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #9eb99d7a; /* Updated main section background color */
+    background-color: #9eb99d7a;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Hero Section */
 .hero {
-    background-color: #46ef6e; /* Changed hero background color */
+    background-color: #46ef6e;
     color: white;
     padding: 40px;
     text-align: center;
@@ -95,7 +71,6 @@ main {
 }
 
 .promotion-item {
-    border: 1px solid #3cbd4d;
     border: 3px solid #030303;
     border-radius: 5px;
     padding: 20px;
@@ -110,33 +85,6 @@ main {
     height: auto;
     border-radius: 5px;
 }
-
-/* Categories Section 
-.categories {
-    margin: 20px 0;
-}
-
-.category-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
-
-.category-item {
-    border: 3px solid #030303;
-    border-radius: 10px;
-    padding: 20px;
-    width: 400px; 
-    margin-bottom: 20px;
-    background-color: #449c31;
-    text-align: center;
-}
-
-.category-item img {
-    width: 200px;
-    height: auto;
-    border-radius: 5px;
-} */
 
 /* General Styles */
 body {
@@ -255,7 +203,6 @@ footer {
     font-size: 0.9rem;
 }
 
-
 /* Product Section */
 .products {
     display: flex;
@@ -358,82 +305,82 @@ button[type="submit"]:hover {
 #invoice-section {
     margin-top: 20px;
     padding: 20px;
-    background-color: #fff; /* White background for clarity */
-    border: 2px solid #ddd; /* Light gray border */
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    max-width: 800px; /* Centered content width */
-    margin: 20px auto; /* Center alignment */
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
 }
 
 #invoice-section h2 {
     text-align: center;
-    font-size: 24px; /* Larger heading size */
-    color: #444; /* Dark gray text */
+    font-size: 24px;
+    color: #444;
     margin-bottom: 20px;
-    text-transform: uppercase; /* All caps */
-    letter-spacing: 1px; /* Spacing for elegance */
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .invoice-header p {
     text-align: center;
-    font-size: 14px; /* Smaller font size for details */
-    color: #666; /* Lighter gray text */
+    font-size: 14px;
+    color: #666;
     margin: 5px 0;
 }
 
 .invoice-header strong {
     font-weight: bold;
-    color: #333; /* Darker text for emphasis */
+    color: #333;
 }
 
 .invoice-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    text-align: center; /* Center table text */
+    text-align: center;
 }
 
 .invoice-table th {
-    background-color: #f8f8f8; /* Light gray background */
-    border: 1px solid #ddd; /* Table border */
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
     padding: 10px;
     font-weight: bold;
-    color: #555; /* Medium gray text */
+    color: #555;
 }
 
 .invoice-table td {
-    border: 1px solid #ddd; /* Table border */
+    border: 1px solid #ddd;
     padding: 10px;
-    font-size: 14px; /* Standard text size */
-    color: #333; /* Text color */
+    font-size: 14px;
+    color: #333;
 }
 
 .invoice-footer {
-    text-align: right; /* Align totals to the right */
+    text-align: right;
     margin-top: 20px;
 }
 
 .invoice-footer p {
-    font-size: 16px; /* Larger font for emphasis */
+    font-size: 16px;
     margin: 5px 0;
-    color: #444; /* Darker text */
+    color: #444;
 }
 
 .invoice-footer strong {
-    color: #28a745; /* Green color for total */
+    color: #28a745;
 }
 
 #invoice-number,
 #invoice-date {
     font-weight: bold;
-    color: #007BFF; /* Highlighted blue color */
+    color: #007BFF;
 }
 
 /* Highlight Total Amount */
 #invoice-amount {
-    font-size: 20px; /* Larger font size */
-    color: #28a745; /* Bright green color */
+    font-size: 20px;
+    color: #28a745;
     font-weight: bold;
     margin-top: 10px;
 }
@@ -451,10 +398,9 @@ button[type="submit"]:hover {
     }
 
     #invoice-amount {
-        font-size: 18px; /* Slightly smaller font on mobile */
+        font-size: 18px;
     }
 }
-
 
 /* Cart Table */
 #cart-table {
@@ -503,19 +449,19 @@ tfoot td {
 
 /* Logout Button */
 .logout-button {
-    background-color: #ff4d4d; /* Change this color as desired */
-    color: rgb(15, 10, 10); /* Text color */
-    border: none; /* Remove border */
-    padding: 10px 20px; /* Button padding */
-    font-size: 16px; /* Font size */
-    cursor: pointer; /* Pointer cursor on hover */
-    margin-top: 20px; /* Space above the button */
-    display: block; /* Ensure it takes up full width */
-    text-align: center; /* Center text */
+    background-color: #ff4d4d;
+    color: rgb(15, 10, 10);
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    display: block;
+    text-align: center;
 }
 
 .logout-button:hover {
-    background-color: #ff1a1a; /* Darker shade on hover */
+    background-color: #ff1a1a;
 }
 
 /* Footer */
@@ -524,6 +470,3 @@ footer {
     padding: 10px;
     background-color: #f1f1f1;
 }
-
-
-
