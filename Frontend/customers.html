@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders Management</title>
+  <title>Customer Management</title>
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
@@ -24,31 +24,31 @@
   </header>
 
   <main>
-    <!-- Filter Orders -->
+    <!-- Add Customer Form -->
     <section class="form-section">
       <div class="container">
-        <h2>Filter Orders</h2>
-        <select id="filter-orders">
-          <option value="all">All Orders</option>
-          <option value="yearly">Yearly</option>
-          <option value="monthly">Monthly</option>
-          <option value="weekly">Weekly</option>
-        </select>
+        <h2>Add Customer</h2>
+        <form id="add-customer-form">
+          <input type="text" id="customer-name" placeholder="Customer Name" required>
+          <input type="email" id="customer-email" placeholder="Email" required>
+          <input type="tel" id="customer-phone" placeholder="Phone" required>
+          <button type="submit">Add Customer</button>
+        </form>
       </div>
     </section>
 
-    <!-- Order List -->
+    <!-- Customer List -->
     <section class="table-section">
       <div class="container">
-        <h2>Order List</h2>
-        <table id="orders-table">
+        <h2>Customer List</h2>
+        <table id="customers-table">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>Date</th>
-              <th>Status</th>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -63,6 +63,6 @@
     </div>
   </footer>
 
-  <script src="scripts/orders.js"></script>
+  <script src="scripts/customers.js"></script>
 </body>
 </html>

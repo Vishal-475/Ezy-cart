@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders Management</title>
+  <title>Workers Management</title>
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
@@ -24,31 +24,31 @@
   </header>
 
   <main>
-    <!-- Filter Orders -->
+    <!-- Add Worker Form -->
     <section class="form-section">
       <div class="container">
-        <h2>Filter Orders</h2>
-        <select id="filter-orders">
-          <option value="all">All Orders</option>
-          <option value="yearly">Yearly</option>
-          <option value="monthly">Monthly</option>
-          <option value="weekly">Weekly</option>
-        </select>
+        <h2>Add Worker</h2>
+        <form id="add-worker-form">
+          <input type="text" id="worker-name" placeholder="Worker Name" required>
+          <input type="text" id="worker-role" placeholder="Role" required>
+          <input type="number" id="worker-salary" placeholder="Salary" required>
+          <button type="submit">Add Worker</button>
+        </form>
       </div>
     </section>
 
-    <!-- Order List -->
+    <!-- Workers List -->
     <section class="table-section">
       <div class="container">
-        <h2>Order List</h2>
-        <table id="orders-table">
+        <h2>Workers List</h2>
+        <table id="workers-table">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>Date</th>
-              <th>Status</th>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Salary</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -63,6 +63,6 @@
     </div>
   </footer>
 
-  <script src="scripts/orders.js"></script>
+  <script src="scripts/workers.js"></script>
 </body>
 </html>
