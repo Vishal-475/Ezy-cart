@@ -8,10 +8,10 @@
 
     <!-- Google Font: Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles/style.css">
     <style>
-        /* Body and background */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -21,23 +21,22 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
         }
 
-        /* Header styling */
         header {
             color: white;
-            text-align: left;
+            text-align: center;
             margin-bottom: 30px;
         }
 
         header h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             letter-spacing: 1px;
         }
 
-        /* Login form container */
-        .login-container {
-            background: rgba(255, 255, 255, 0.9);
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -46,13 +45,12 @@
             text-align: center;
         }
 
-        .login-container h2 {
+        .auth-container h2 {
             font-size: 2rem;
             margin-bottom: 20px;
             color: #004d4d;
         }
 
-        /* Form group styling */
         .form-group {
             margin-bottom: 20px;
             position: relative;
@@ -61,6 +59,7 @@
         .form-group input, .form-group select {
             width: 80%;
             padding: 15px;
+            padding-left: 45px;
             margin-top: 8px;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -74,15 +73,14 @@
             box-shadow: 0 0 5px rgba(2, 180, 165, 0.6);
         }
 
-        .form-group input::placeholder, .form-group select {
-            color: #999;
+        .input-icon {
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
         }
 
-        .form-group input:focus::placeholder {
-            color: transparent;
-        }
-
-        /* Login button */
         button {
             background: #5aa836;
             color: white;
@@ -93,6 +91,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.3s ease;
+            margin-top: 10px;
         }
 
         button:hover {
@@ -100,11 +99,19 @@
             transform: scale(1.05);
         }
 
-        button:active {
-            transform: scale(1);
+        .toggle-auth {
+            margin-top: 15px;
+            color: #004d4d;
+            cursor: pointer;
+            text-decoration: underline;
         }
 
-        /* Footer styling */
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            display: none;
+        }
+
         footer {
             text-align: center;
             padding: 10px;
@@ -119,10 +126,6 @@
             color: #fff;
             text-decoration: none;
             font-weight: bold;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
         }
 
         /* Cart Badge Styling */
@@ -149,55 +152,64 @@
             border-radius: 50%;
             font-size: 14px;
         }
-
-        /* Input Icon Styling */
-        .input-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #aaa;
-        }
-
-        .form-group input {
-            padding-left: 40px; /* Space for icon */
-        }
-
     </style>
 </head>
 <body>
+    <div class="cart-badge" onclick="window.location.href='cart.html'">
+        <img src="/assets/logo/cart.png" alt="cart">
+        <div class="badge" id="cartCount">0</div>
+    </div>
+    
     <header>
-        <div class="cart-badge">
-            <img src="/assets/logo/cart.png" alt="cart">
-            <div class="badge" id="cartCount">0</div>
-        </div>
         <h1>EzyCart - THE DAILY BASKET 🛒💨</h1>
     </header>
 
     <main>
-        <section class="login-container">
+        <!-- Login Section -->
+        <section class="auth-container" id="login-section">
             <h2>Welcome Back!</h2>
-            <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="error-message" id="login-error"></div>
+            <form id="loginForm">
                 <div class="form-group">
-                    <i class="input-icon fas fa-user"></i>
-                    <input type="text" id="username" placeholder="Enter your username" required>
+                    <i class="input-icon fas fa-envelope"></i>
+                    <input type="email" id="login-email" placeholder="Enter your email" required>
                 </div>
-
                 <div class="form-group">
                     <i class="input-icon fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <input type="password" id="login-password" placeholder="Enter your password" required>
                 </div>
+                <button type="submit">Login</button>
+            </form>
+            <p class="toggle-auth" onclick="toggleAuthMode()">Don't have an account? Register here.</p>
+        </section>
 
+        <!-- Register Section -->
+        <section class="auth-container" id="register-section" style="display: none;">
+            <h2>Create an Account</h2>
+            <div class="error-message" id="register-error"></div>
+            <form id="registerForm">
                 <div class="form-group">
-                    <label for="role">Login as:</label>
-                    <select id="role">
+                    <i class="input-icon fas fa-user"></i>
+                    <input type="text" id="register-name" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <i class="input-icon fas fa-envelope"></i>
+                    <input type="email" id="register-email" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" id="register-password" placeholder="Password (min 6 chars)" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="register-role" style="display:block; text-align:left; padding-left: 10%; margin-bottom: 5px;">Role:</label>
+                    <select id="register-role" style="width: 80%; padding-left: 15px;">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
-
-                <button type="submit">Login</button>
+                <button type="submit">Register</button>
             </form>
+            <p class="toggle-auth" onclick="toggleAuthMode()">Already have an account? Login here.</p>
         </section>
     </main>
 
@@ -205,35 +217,67 @@
         <p>&copy; 2024 EzyCart THE DAILY BASKET. <a href="privacy-policy.html" target="_blank">Privacy Policy</a></p>
     </footer>
 
-    <script>
-        // Cart item count function
-        let cartItemCount = 0;
+    <script type="module">
+        import { loginUser, registerUser } from './scripts/auth.js';
 
-        function updateCartCount() {
-            document.getElementById('cartCount').textContent = cartItemCount;
-        }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
-
-            // Save login status in sessionStorage
-            sessionStorage.setItem('username', username);
-            sessionStorage.setItem('role', role);
-
-            // Redirect based on the role
-            if (role === 'user') {
-                window.location.href = 'index.html';  // Redirect to Home (User)
-            } else if (role === 'admin') {
-                window.location.href = 'admin.html';  // Redirect to Admin Dashboard
+        // Toggle between Login and Register views
+        window.toggleAuthMode = function() {
+            const loginSec = document.getElementById('login-section');
+            const regSec = document.getElementById('register-section');
+            if (loginSec.style.display === 'none') {
+                loginSec.style.display = 'block';
+                regSec.style.display = 'none';
             } else {
-                alert('Invalid role selected!');
+                loginSec.style.display = 'none';
+                regSec.style.display = 'block';
             }
-        }
+        };
 
+        // Handle Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.style.display = 'none';
+            const res = await loginUser(email, password);
+            if (res.success) {
+                // Redirect based on role
+                if (res.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                errorDiv.textContent = res.error;
+                errorDiv.style.display = 'block';
+            }
+        });
 
+        // Handle Register
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const role = document.getElementById('register-role').value;
+            const errorDiv = document.getElementById('register-error');
+
+            errorDiv.style.display = 'none';
+            const res = await registerUser(email, password, name, role);
+            if (res.success) {
+                alert('Registration successful! Logging you in...');
+                if (res.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                errorDiv.textContent = res.error;
+                errorDiv.style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>
