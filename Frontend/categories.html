@@ -3,37 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EzyCart THE DAILY BASKET - Categories</title>
+    <title>EzyCart — Browse Products | THE DAILY BASKET</title>
+    <meta name="description" content="Browse fresh groceries by category at EzyCart THE DAILY BASKET. Fruits, vegetables, dairy, beverages and snacks.">
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="icon" href="/assets/logo/cart.png">
+    <link rel="icon" href="assets/logo/cart.png">
+    <script src="scripts/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .filter-bar {
-            padding: 20px;
+        .category-item button {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .product-count {
             text-align: center;
-            background: #fff;
+            color: var(--text-muted);
+            font-size: 0.85rem;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .filter-bar input, .filter-bar select {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 1rem;
+
+        /* Add-to-cart animation feedback */
+        @keyframes addPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
-        .loader {
-            text-align: center;
-            font-size: 1.2rem;
-            padding: 50px;
+
+        .category-item.just-added {
+            animation: addPulse 0.3s ease;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Categories</h1>
+        <h1>EzyCart</h1>
         <nav>
             <a href="index.html">Home</a>
-            <a href="categories.html">Categories</a>
+            <a href="categories.html" class="active">Categories</a>
             <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
             <a href="login.html" id="auth-link">Login</a>
@@ -41,30 +47,40 @@
     </header>
 
     <main>
+        <h2><i class="fas fa-th-large" style="color: var(--accent); margin-right: 8px;"></i>Browse Products</h2>
+
+        <!-- Filter Bar -->
         <div class="filter-bar">
-            <input type="text" id="searchBar" placeholder="Search products...">
+            <div style="position: relative; flex: 1; min-width: 200px;">
+                <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
+                <input type="text" id="searchBar" placeholder="Search products..." style="padding-left: 40px; width: 100%;">
+            </div>
             <select id="categoryFilter">
                 <option value="">All Categories</option>
                 <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-                <option value="Dairy/Fresh Meats & Seafood">Dairy/Fresh Meats & Seafood</option>
+                <option value="Dairy/Fresh Meats & Seafood">Dairy / Meats & Seafood</option>
                 <option value="Snacks">Snacks</option>
                 <option value="Beverages">Beverages</option>
             </select>
         </div>
 
-        <section>
-            <h2 id="category-title">All Products</h2>
-            <div id="loader" class="loader">Loading products...</div>
-            <div class="category-grid" id="products-container">
-                <!-- Products will be loaded here dynamically -->
-            </div>
-            <br>
-            <button onclick="window.location.href='cart.html'" style="display:block; margin: 0 auto;">View Cart</button>
-        </section>
+        <p class="product-count" id="product-count-text"></p>
+
+        <div id="loader" class="loader"><i class="fas fa-spinner fa-spin"></i> Loading products...</div>
+
+        <div class="category-grid" id="products-container">
+            <!-- Products loaded dynamically -->
+        </div>
+
+        <div style="text-align: center; margin-top: 32px;">
+            <button class="btn-lg" onclick="window.location.href='cart.html'">
+                <i class="fas fa-shopping-cart"></i> View Cart
+            </button>
+        </div>
     </main>
-    
+
     <footer>
-        <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
+        <p>&copy; 2024 EzyCart THE DAILY BASKET. All rights reserved.</p>
     </footer>
 
     <script type="module">
@@ -80,12 +96,11 @@
             const loader = document.getElementById('loader');
             
             try {
-                // For now, if Firebase is not connected or products are empty, it will show an empty list.
                 allProducts = await getAllProducts();
                 loader.style.display = 'none';
                 renderProducts(allProducts);
             } catch (e) {
-                loader.textContent = 'Error loading products. Please configure Firebase.';
+                loader.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Error loading products. Please check your connection.';
                 console.error(e);
             }
 
@@ -100,10 +115,10 @@
                     if (user) {
                         const role = await getUserRole(user.uid);
                         if (role === 'admin') {
-                            authLink.innerHTML = 'Admin Panel';
+                            authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
                             authLink.href = 'admin.html';
                         } else {
-                            authLink.innerHTML = 'Logout';
+                            authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
                             authLink.href = '#';
                             authLink.onclick = async (e) => {
                                 e.preventDefault();
@@ -112,7 +127,7 @@
                             };
                         }
                     } else {
-                        authLink.innerHTML = 'Login';
+                        authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                         authLink.href = 'login.html';
                         authLink.onclick = null;
                     }
@@ -127,9 +142,6 @@
             let filtered = allProducts;
             if (category) {
                 filtered = filtered.filter(p => p.category === category);
-                document.getElementById('category-title').textContent = category;
-            } else {
-                document.getElementById('category-title').textContent = 'All Products';
             }
             if (searchTerm) {
                 filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
@@ -139,28 +151,40 @@
 
         function renderProducts(products) {
             const container = document.getElementById('products-container');
+            const countText = document.getElementById('product-count-text');
             container.innerHTML = '';
             
+            countText.textContent = `${products.length} product${products.length !== 1 ? 's' : ''} found`;
+
             if (products.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No products found.</p>';
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 48px 0;"><i class="fas fa-search" style="font-size: 2rem; display: block; margin-bottom: 12px;"></i>No products found matching your search.</p>';
                 return;
             }
 
             products.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'category-item';
+                item.id = `product-${p.name.replace(/\s+/g, '-').toLowerCase()}`;
                 item.innerHTML = `
-                    <img src="${p.image || '/assets/img/default.png'}" alt="${p.name}" width="150px" style="height: 150px; object-fit: contain;">
+                    <img src="${p.image || 'assets/img/default.png'}" alt="${p.name}" style="height: 150px; object-fit: contain;">
                     <h3>${p.name}</h3>
-                    <p>₹${p.price.toFixed(2)} / ${p.unit || 'item'}</p>
-                    <button onclick="window.handleAddToCart('${p.name}', ${p.price})">Add to Cart</button>
+                    <p style="color: var(--accent); font-weight: 600; font-size: 1rem;">₹${p.price.toFixed(2)} <span style="color: var(--text-muted); font-weight: 400; font-size: 0.8rem;">/ ${p.unit || 'item'}</span></p>
+                    <button onclick="window.handleAddToCart('${p.name.replace(/'/g, "\\'")}', ${p.price}, this)">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
                 `;
                 container.appendChild(item);
             });
         }
 
-        window.handleAddToCart = function(name, price) {
+        window.handleAddToCart = function(name, price, btnEl) {
             addToCart(name, price);
+            // Visual feedback
+            const card = btnEl.closest('.category-item');
+            if (card) {
+                card.classList.add('just-added');
+                setTimeout(() => card.classList.remove('just-added'), 350);
+            }
         };
 
         document.addEventListener('DOMContentLoaded', init);

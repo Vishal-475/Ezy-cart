@@ -1,16 +1,69 @@
-// This module handles cart state locally and provides interface for cloud sync later
+import { auth, db, doc, setDoc, getDoc, onAuthStateChanged } from './firebase-config.js';
+import { showToast } from './toast.js';
+
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-// Save to localStorage
+// Save to localStorage and trigger cloud sync
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartBadge();
+    
+    // Sync to cloud if user is logged in
+    const user = auth.currentUser;
+    if (user) {
+        setDoc(doc(db, "carts", user.uid), {
+            items: cart,
+            updatedAt: new Date().toISOString()
+        }).catch(err => console.error("Error syncing cart to Firestore:", err));
+    }
 }
+
+// Merge cloud and local carts
+async function mergeCloudCart(user) {
+    try {
+        const cartRef = doc(db, "carts", user.uid);
+        const docSnap = await getDoc(cartRef);
+        
+        let cloudItems = [];
+        if (docSnap.exists()) {
+            cloudItems = docSnap.data().items || [];
+        }
+        
+        let mergedCart = [...cloudItems];
+        cart.forEach(localItem => {
+            const matchIndex = mergedCart.findIndex(cloudItem => cloudItem.name === localItem.name);
+            if (matchIndex !== -1) {
+                mergedCart[matchIndex].quantity = Math.max(mergedCart[matchIndex].quantity, localItem.quantity);
+            } else {
+                mergedCart.push(localItem);
+            }
+        });
+        
+        cart = mergedCart;
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartBadge();
+        
+        await setDoc(cartRef, {
+            items: cart,
+            updatedAt: new Date().toISOString()
+        });
+        
+        window.dispatchEvent(new Event('cartSynced'));
+    } catch (err) {
+        console.error("Error merging cloud cart:", err);
+    }
+}
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        mergeCloudCart(user);
+    }
+});
 
 // Add item to cart
 export function addToCart(productName, productPrice, quantity = 1) {
     if (isNaN(productPrice) || productPrice <= 0) {
-        alert("Invalid product price!");
+        showToast("Invalid product price!", "error");
         return;
     }
     const productIndex = cart.findIndex(item => item.name === productName);
@@ -20,7 +73,7 @@ export function addToCart(productName, productPrice, quantity = 1) {
         cart.push({ name: productName, price: productPrice, quantity: quantity });
     }
     saveCart();
-    alert(`${productName} added to cart!`);
+    showToast(`${productName} added to cart!`, "success");
 }
 
 // Remove item
@@ -36,15 +89,28 @@ export function adjustQuantity(productName, adjustment) {
             cart[productIndex].quantity += adjustment;
             saveCart();
         } else {
-            alert('Quantity cannot be less than 1');
+            showToast('Quantity cannot be less than 1', 'warning');
         }
     }
 }
 
-// Clear cart
+// Clear cart (local + cloud)
 export function clearCart() {
     cart = [];
-    saveCart();
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+    
+    // Also clear from Firestore
+    const user = auth.currentUser;
+    if (user) {
+        setDoc(doc(db, "carts", user.uid), {
+            items: [],
+            updatedAt: new Date().toISOString()
+        }).catch(err => console.error("Error clearing cloud cart:", err));
+    }
+    
+    // Notify other components
+    window.dispatchEvent(new Event('cartSynced'));
 }
 
 // Get cart items

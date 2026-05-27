@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customers Management - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <script src="scripts/theme.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .table-section { margin-top: 20px; }
@@ -44,6 +45,7 @@
             <th>User ID</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Phone</th>
             <th>Role</th>
             <th>Joined Date</th>
           </tr>
@@ -58,6 +60,7 @@
   <script type="module">
     import { auth, onAuthStateChanged, signOut, db, collection, getDocs, query, orderBy } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
+    import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
     onAuthStateChanged(auth, async (user) => {
@@ -67,8 +70,10 @@
       }
       const role = await getUserRole(user.uid);
       if (role !== 'admin') {
-        alert("Access denied. Admins only.");
-        window.location.href = 'index.html';
+        showToast("Access denied. Admins only.", "error");
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
       } else {
         loadCustomers();
       }
@@ -105,7 +110,8 @@
           row.innerHTML = `
             <td><small>${doc.id}</small></td>
             <td><strong>${user.displayName || 'N/A'}</strong></td>
-            <td>${user.email}</td>
+            <td>${user.email || 'N/A'}</td>
+            <td>${user.phoneNumber || 'N/A'}</td>
             <td><span class="badge-role ${roleClass}">${user.role.toUpperCase()}</span></td>
             <td>${dateStr}</td>
           `;

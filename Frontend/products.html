@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Products - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <script src="scripts/theme.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .form-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -82,6 +83,7 @@
     import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
     import { getAllProducts, addProduct, deleteProduct, updateProduct } from './scripts/products-api.js';
+    import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
     onAuthStateChanged(auth, async (user) => {
@@ -91,8 +93,10 @@
       }
       const role = await getUserRole(user.uid);
       if (role !== 'admin') {
-        alert("Access denied. Admins only.");
-        window.location.href = 'index.html';
+        showToast("Access denied. Admins only.", "error");
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
       } else {
         loadProducts();
       }
@@ -146,11 +150,11 @@
 
       const res = await addProduct(newProduct);
       if (res.success) {
-        alert("Product added successfully!");
+        showToast("Product added successfully!", "success");
         document.getElementById('add-product-form').reset();
         loadProducts();
       } else {
-        alert("Error adding product: " + res.error);
+        showToast("Error adding product: " + res.error, "error");
       }
     });
 

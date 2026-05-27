@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orders Management - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <script src="scripts/theme.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .table-section { margin-top: 20px; }
@@ -61,6 +62,7 @@
     import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
     import { getAllOrders, updateOrderStatus } from './scripts/orders-api.js';
+    import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
     onAuthStateChanged(auth, async (user) => {
@@ -70,8 +72,10 @@
       }
       const role = await getUserRole(user.uid);
       if (role !== 'admin') {
-        alert("Access denied. Admins only.");
-        window.location.href = 'index.html';
+        showToast("Access denied. Admins only.", "error");
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
       } else {
         loadOrders();
       }
@@ -101,7 +105,7 @@
         row.innerHTML = `
           <td>${order.invoiceNumber}</td>
           <td>${order.customerName}</td>
-          <td>${order.contactNumber}<br><small>${order.contactEmail}</small></td>
+          <td>${order.customerPhone || 'N/A'}<br><small>${order.contactEmail || ''}</small></td>
           <td>${order.paymentMethod.toUpperCase()}</td>
           <td>${parseFloat(order.total).toFixed(2)}</td>
           <td>${dateStr}</td>
@@ -126,10 +130,10 @@
       const newStatus = document.getElementById(`status-${id}`).value;
       const res = await updateOrderStatus(id, newStatus);
       if (res.success) {
-        alert("Order status updated successfully!");
+        showToast("Order status updated successfully!", "success");
         loadOrders();
       } else {
-        alert("Failed to update status.");
+        showToast("Failed to update status.", "error");
       }
     };
 

@@ -3,232 +3,467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVMG THE DAILY BASKET - Checkout</title>
+    <title>EzyCart — Checkout | THE DAILY BASKET</title>
+    <meta name="description" content="Complete your order at EzyCart THE DAILY BASKET. Secure checkout with UPI, Credit Card, and Cash on Delivery.">
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="icon" href="img/logo/cart.png">
-
+    <link rel="icon" href="assets/logo/cart.png">
+    <script src="scripts/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
+        /* Checkout-specific enhancements */
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .checkout-left,
+        .checkout-right {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .checkout-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            transition: background-color var(--transition-base), border-color var(--transition-base);
+        }
+
+        .checkout-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkout-card h3 .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Order summary table */
+        .summary-table {
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            border-collapse: separate;
+            border-spacing: 0;
         }
-    
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s ease-out;
-        }
-    
-        @keyframes slideIn {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-    
-        .invoice-header {
-            background: #f37254;
-            color: white;
-            padding: 25px;
-            border-radius: 15px 15px 0 0;
-            text-align: center;
-        }
-    
-        .invoice-header img {
-            width: 80px;
-            margin-bottom: 15px;
-        }
-    
-        .invoice-details {
-            padding: 25px;
-        }
-    
-        .invoice-table {
-            width: 100%;
-            margin: 20px 0;
-            border-collapse: collapse;
-        }
-    
-        .invoice-table th {
-            background: #f8f9fa;
-            padding: 12px;
+
+        .summary-table th {
+            background: var(--accent-light);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 10px 14px;
             text-align: left;
+            border-bottom: 2px solid var(--accent);
         }
-    
-        .invoice-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+
+        .summary-table td {
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
-    
-        .invoice-totals {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
+
+        /* Tax breakdown */
+        .tax-summary {
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: var(--accent-light);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
-    
-        .invoice-totals p {
-            margin: 10px 0;
+
+        .tax-row {
             display: flex;
             justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
         }
-    
-        .status-badge {
-            background: #4CAF50;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            display: inline-block;
-            margin-top: 15px;
+
+        .tax-row.divider {
+            border-top: 1.5px dashed var(--border-color);
+            margin-top: 6px;
+            padding-top: 10px;
         }
-    
-        .close-button {
+
+        .tax-row.grand-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            border-top: 2px solid var(--accent);
+            margin-top: 8px;
+            padding-top: 12px;
+        }
+
+        /* Payment options */
+        .payment-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .payment-option {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .payment-option:hover {
+            border-color: var(--accent);
+        }
+
+        .payment-option.selected {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .payment-option input[type="radio"] {
+            display: none;
+        }
+
+        .payment-option .radio-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: var(--radius-full);
+            border: 2px solid var(--border-color);
+            position: relative;
+            transition: border-color var(--transition-fast);
+            flex-shrink: 0;
+        }
+
+        .payment-option.selected .radio-dot {
+            border-color: var(--accent);
+        }
+
+        .payment-option.selected .radio-dot::after {
+            content: '';
             position: absolute;
-            right: 20px;
-            top: 20px;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            transition: transform 0.2s;
+            inset: 3px;
+            border-radius: var(--radius-full);
+            background: var(--accent);
         }
-    
-        .close-button:hover {
-            transform: scale(1.2);
+
+        .payment-option i {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
         }
-    
-        .download-section {
+
+        /* UPI QR */
+        .qr-box {
             text-align: center;
-            margin-top: 25px;
+            padding: 24px;
+            margin-top: 16px;
+            background: var(--accent-light);
+            border-radius: var(--radius-md);
+            border: 1px dashed var(--accent);
+            animation: fadeInUp 0.3s ease-out;
         }
-    
-        .download-btn {
-            background: #f37254;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background 0.3s;
+
+        .qr-box canvas {
+            border-radius: var(--radius-sm);
+            margin: 12px auto;
+            display: block;
         }
-    
-        .download-btn:hover {
-            background: #e65a3a;
+
+        .qr-box p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .qr-box .amount-display {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+
+        /* Place order button */
+        .place-order-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.05rem;
+            border-radius: var(--radius-md);
+            margin-top: 8px;
+        }
+
+        .place-order-btn i {
+            font-size: 1rem;
+        }
+
+        /* Checkout login prompt */
+        .login-prompt-card {
+            text-align: center;
+            padding: 40px 32px;
+        }
+
+        .login-prompt-card .icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-full);
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .login-prompt-card h3 {
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .login-prompt-card p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+
+        .login-prompt-card .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Store info */
+        .store-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .store-info .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .store-info .info-row i {
+            color: var(--accent);
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Empty cart state */
+        .empty-cart {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .empty-cart .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
+
+        .empty-cart h3 {
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .empty-cart p {
+            color: var(--text-secondary);
+            margin: 8px 0 24px;
+        }
+
+        /* ─── Invoice Modal Enhancements ─── */
+        .invoice-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .invoice-meta-block h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .invoice-meta-block p {
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            margin: 3px 0;
+            line-height: 1.5;
+        }
+
+        .invoice-company-info {
+            text-align: center;
+            padding: 8px 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+            .payment-options {
+                flex-direction: column;
+            }
+            .invoice-meta-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Checkout</h1>
+        <h1>EzyCart</h1>
         <nav>
             <a href="index.html">Home</a>
             <a href="categories.html">Categories</a>
             <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
-            <a href="checkout.html">Checkout</a>
+            <a href="checkout.html" class="active">Checkout</a>
             <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
+
     <main>
-        <section class="checkout-container">
-            <div class="contact-details">
-                <h2>Contact Information : </h2>
-                <p>Email: allsupport@svmgthedailybasket.com</p>
-                <p>Phone: +91 7904656748</p>
-                <p>Address: Building 8, Starlight Square, Celestial Drive, 901567</p>
+        <h2><i class="fas fa-shield-alt" style="color: var(--accent); margin-right: 8px;"></i>Secure Checkout</h2>
+
+        <!-- Empty Cart State (hidden by default) -->
+        <div id="empty-cart-state" class="checkout-card empty-cart" style="display: none;">
+            <div class="icon-circle">🛒</div>
+            <h3>Your cart is empty</h3>
+            <p>Add some products to your cart before checking out.</p>
+            <button onclick="location.href='categories.html'" class="btn-lg">
+                <i class="fas fa-store"></i> Browse Products
+            </button>
+        </div>
+
+        <!-- Login Prompt (shown if not logged in and cart has items) -->
+        <div id="login-prompt" class="checkout-card login-prompt-card" style="display: none;">
+            <div class="icon-circle"><i class="fas fa-user-lock"></i></div>
+            <h3>Sign in to place your order</h3>
+            <p>You need to be logged in to complete checkout. Your cart items are safe!</p>
+            <div class="btn-group">
+                <button onclick="location.href='login.html?redirect=checkout.html'" class="btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+                <button onclick="location.href='login.html?redirect=checkout.html'" class="btn-outline btn-lg">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
             </div>
+        </div>
 
-            <!-- Cart Summary Section -->
-            <div class="cart-summary">
-                <h2>Your Cart</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-items">
-                        <!-- Cart items will be dynamically inserted here -->
-                    </tbody>
-                </table>
-                <p><strong>Subtotal: ₹<span id="cart-subtotal">0.00</span></strong></p>
-                <p><strong>Tax (5%): ₹<span id="cart-tax">0.00</span></strong></p>
-                <p><strong>Total: ₹<span id="cart-total">0.00</span></strong></p>
-            </div>
-
-            <form id="checkout-form">
-                <h2>Shipping & Payment Details</h2>
-                <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="address">Address:</label>
-                    <input type="text" id="address" required>
-                </div>
-                <div class="form-group">
-                    <label for="contact">Contact Number:</label>
-                    <input type="tel" id="contact" required>
-                </div>
-                <div class="form-group">
-                    <label for="payment">Payment Method:</label>
-                    <select id="payment" onchange="toggleQRCode()">
-                        <option value="credit">Credit Card</option>
-                        <option value="upi">UPI</option>
-                    </select>
-                </div>
-                <div id="qr-code-section" class="qr-code-section" style="display: none;">
-                    <p>Scan this QR Code to pay via UPI:</p>
-                    <canvas id="qr-code"></canvas>
-                    <p><strong>Amount: ₹<span id="amount-display">0.00</span></strong></p>
-                </div>
-                <button type="submit" id="place-order-btn">Place Order</button>
-            </form>
-        </section>
-
-        <!-- Invoice Modal -->
-        <div id="invoice-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="closeModal()">&times;</span>
-                <div class="invoice-header">
-                    <img src="/assets/logo/cart.png" alt="Company Logo">
-                    <h2>Payment Successful! 🎉</h2>
-                    <p>Thank you for your purchase!</p>
-                </div>
-                
-                <div class="invoice-details">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                        <div>
-                            <h3>Bill To:</h3>
-                            <p id="invoice-name"></p>
-                            <p id="invoice-address"></p>
-                            <p id="invoice-contact"></p>
+        <!-- Main Checkout Content -->
+        <div id="checkout-content" class="checkout-grid" style="display: none;">
+            <!-- LEFT: Shipping & Payment -->
+            <div class="checkout-left">
+                <!-- Customer Info -->
+                <div class="checkout-card">
+                    <h3><span class="step-num">1</span> Your Details</h3>
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <label for="cust-name">Full Name</label>
+                            <input type="text" id="cust-name" placeholder="Your full name" required>
                         </div>
-                        <div>
-                            <p><strong>Invoice #:</strong> <span id="invoice-number"></span></p>
-                            <p><strong>Date:</strong> <span id="invoice-date"></span></p>
-                            <p><strong>Payment Method:</strong> <span id="invoice-payment"></span></p>
+                        <div class="form-group">
+                            <label for="cust-phone">Phone Number</label>
+                            <input type="tel" id="cust-phone" placeholder="+91 9876543210" required>
                         </div>
+                        <div class="form-group">
+                            <label for="cust-email">Email (optional)</label>
+                            <input type="email" id="cust-email" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="cust-address">Delivery Address</label>
+                            <input type="text" id="cust-address" placeholder="Full delivery address" required>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-card">
+                    <h3><span class="step-num">2</span> Payment Method</h3>
+                    <div class="payment-options">
+                        <label class="payment-option selected" data-value="upi">
+                            <input type="radio" name="payment" value="upi" checked>
+                            <span class="radio-dot"></span>
+                            <i class="fas fa-qrcode"></i>
+                            <span>UPI</span>
+                        </label>
+                        <label class="payment-option" data-value="credit">
+                            <input type="radio" name="payment" value="credit">
+                            <span class="radio-dot"></span>
+                            <i class="fas fa-credit-card"></i>
+                            <span>Card</span>
+                        </label>
+                        <label class="payment-option" data-value="cod">
+                            <input type="radio" name="payment" value="cod">
+                            <span class="radio-dot"></span>
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Cash on Delivery</span>
+                        </label>
                     </div>
-        
-                    <table class="invoice-table">
+
+                    <!-- UPI QR Section -->
+                    <div id="qr-section" class="qr-box">
+                        <p><i class="fas fa-qrcode"></i> Scan to pay via UPI</p>
+                        <canvas id="qr-code"></canvas>
+                        <div class="amount-display">₹<span id="qr-amount">0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- Place Order -->
+                <button type="button" id="place-order-btn" class="place-order-btn btn-lg">
+                    <i class="fas fa-check-circle"></i> Place Order
+                </button>
+            </div>
+
+            <!-- RIGHT: Order Summary -->
+            <div class="checkout-right">
+                <!-- Cart Items -->
+                <div class="checkout-card">
+                    <h3><i class="fas fa-shopping-bag" style="color: var(--accent);"></i> Order Summary</h3>
+                    <table class="summary-table">
                         <thead>
                             <tr>
                                 <th>Item</th>
@@ -237,180 +472,380 @@
                                 <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody id="invoice-products"></tbody>
+                        <tbody id="cart-items-body">
+                            <!-- Dynamic -->
+                        </tbody>
                     </table>
-        
-                    <div class="invoice-totals">
-                        <p><span>Subtotal:</span> <span>₹<span id="invoice-subtotal"></span></span></p>
-                        <p><span>Tax (5%):</span> <span>₹<span id="invoice-tax"></span></span></p>
-                        <p style="font-weight: bold; font-size: 1.2em;">
-                            <span>Total Paid:</span> <span>₹<span id="invoice-amount"></span></span>
-                        </p>
+
+                    <!-- Tax Breakdown -->
+                    <div class="tax-summary">
+                        <div class="tax-row">
+                            <span>Subtotal</span>
+                            <span>₹<span id="val-subtotal">0.00</span></span>
+                        </div>
+                        <div class="tax-row">
+                            <span>CGST @ 2.5%</span>
+                            <span>₹<span id="val-cgst">0.00</span></span>
+                        </div>
+                        <div class="tax-row">
+                            <span>SGST @ 2.5%</span>
+                            <span>₹<span id="val-sgst">0.00</span></span>
+                        </div>
+                        <div class="tax-row grand-total">
+                            <span>Grand Total</span>
+                            <span>₹<span id="val-grand-total">0.00</span></span>
+                        </div>
                     </div>
-        
-                    <div class="status-badge">Order Confirmed ✔</div>
-        
-                    <div class="download-section">
-                        <button class="download-btn" onclick="printInvoice()">Download Invoice</button>
+                </div>
+
+                <!-- Store Contact -->
+                <div class="checkout-card">
+                    <h3><i class="fas fa-store" style="color: var(--accent);"></i> Store Info</h3>
+                    <div class="store-info">
+                        <div class="info-row"><i class="fas fa-phone"></i> +91 7904656748</div>
+                        <div class="info-row"><i class="fas fa-envelope"></i> support@svmgthedailybasket.com</div>
+                        <div class="info-row"><i class="fas fa-map-marker-alt"></i> Building 8, Starlight Square, Celestial Drive, 901567</div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- ═══════ Invoice Modal ═══════ -->
+        <div id="invoice-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-invoice">&times;</span>
+
+                <!-- Invoice Header -->
+                <div class="invoice-header">
+                    <h2 style="margin-bottom: 4px;">Payment Successful! 🎉</h2>
+                    <p>Thank you for shopping with THE DAILY BASKET</p>
+                </div>
+
+                <!-- Invoice Body -->
+                <div class="invoice-details">
+                    <!-- Company + Customer Info -->
+                    <div class="invoice-meta-grid">
+                        <div class="invoice-meta-block">
+                            <h4>From</h4>
+                            <p><strong>SVMG THE DAILY BASKET</strong></p>
+                            <p>Building 8, Starlight Square</p>
+                            <p>Celestial Drive, 901567</p>
+                            <p>Ph: +91 7904656748</p>
+                        </div>
+                        <div class="invoice-meta-block">
+                            <h4>Bill To</h4>
+                            <p><strong id="inv-name"></strong></p>
+                            <p id="inv-phone"></p>
+                            <p id="inv-address"></p>
+                            <p id="inv-email" style="font-size:0.82rem; color: var(--text-muted);"></p>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Meta -->
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding: 12px 16px; background: var(--accent-light); border-radius: var(--radius-sm);">
+                        <div><strong>Invoice #:</strong> <span id="inv-number" style="color: var(--accent); font-weight:600;"></span></div>
+                        <div><strong>Date:</strong> <span id="inv-date"></span></div>
+                        <div><strong>Payment:</strong> <span id="inv-payment"></span></div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-items"></tbody>
+                    </table>
+
+                    <!-- Invoice Totals -->
+                    <div class="invoice-totals">
+                        <p><span>Subtotal</span> <span>₹<span id="inv-subtotal"></span></span></p>
+                        <p><span>CGST @ 2.5%</span> <span>₹<span id="inv-cgst"></span></span></p>
+                        <p><span>SGST @ 2.5%</span> <span>₹<span id="inv-sgst"></span></span></p>
+                        <p class="grand-total"><span>Grand Total</span> <span>₹<span id="inv-grand-total"></span></span></p>
+                    </div>
+
+                    <div style="text-align:center; margin-top:16px;">
+                        <span class="status-badge"><i class="fas fa-check-circle"></i> Order Confirmed</span>
+                    </div>
+
+                    <div class="download-section">
+                        <button class="download-btn" id="download-invoice-btn">
+                            <i class="fas fa-download"></i> Download Invoice
+                        </button>
+                    </div>
+
+                    <div class="invoice-company-info">
+                        <p>Thank you for shopping with SVMG THE DAILY BASKET!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <footer>
+        <p>&copy; 2024 EzyCart THE DAILY BASKET. All rights reserved.</p>
+    </footer>
 
     <script type="module">
         import { getCart, getCartTotal, clearCart, updateCartBadge } from './scripts/cart-manager.js';
         import { placeOrder } from './scripts/orders-api.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
-        import { getUserRole } from './scripts/auth.js';
+        import { getUserRole, getUserProfile } from './scripts/auth.js';
+        import { showToast } from './scripts/toast.js';
 
         let cartItems = [];
         let subtotal = 0;
-        let tax = 0;
-        let totalAmount = 0;
+        let cgst = 0;
+        let sgst = 0;
+        let grandTotal = 0;
+        let currentUser = null;
+        let selectedPayment = 'upi';
 
-        function displayCartItems() {
+        // ─── Compute Totals ───
+        function computeTotals() {
             cartItems = getCart();
             subtotal = getCartTotal();
-            tax = subtotal * 0.05;
-            totalAmount = subtotal + tax;
+            cgst = subtotal * 0.025;
+            sgst = subtotal * 0.025;
+            grandTotal = subtotal + cgst + sgst;
+        }
 
-            const cartTable = document.getElementById('cart-items');
-            cartTable.innerHTML = '';
+        // ─── Render Cart Summary ───
+        function renderCartSummary() {
+            computeTotals();
+            const tbody = document.getElementById('cart-items-body');
+            tbody.innerHTML = '';
+
             cartItems.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.quantity}</td>
                     <td>₹${item.price.toFixed(2)}</td>
                     <td>₹${(item.price * item.quantity).toFixed(2)}</td>
                 `;
-                cartTable.appendChild(row);
+                tbody.appendChild(tr);
             });
 
-            document.getElementById('cart-subtotal').textContent = subtotal.toFixed(2);
-            document.getElementById('cart-tax').textContent = tax.toFixed(2);
-            document.getElementById('cart-total').textContent = totalAmount.toFixed(2);
+            document.getElementById('val-subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('val-cgst').textContent = cgst.toFixed(2);
+            document.getElementById('val-sgst').textContent = sgst.toFixed(2);
+            document.getElementById('val-grand-total').textContent = grandTotal.toFixed(2);
+
             updateCartBadge();
+            updateQR();
         }
 
-        window.toggleQRCode = function() {
-            const paymentMethod = document.getElementById('payment').value;
-            const qrSection = document.getElementById('qr-code-section');
-            const amountDisplay = document.getElementById('amount-display');
+        // ─── Payment Method Selection ───
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                option.querySelector('input[type="radio"]').checked = true;
+                selectedPayment = option.dataset.value;
 
-            if (paymentMethod === 'upi') {
-                qrSection.style.display = 'block';
-                amountDisplay.textContent = totalAmount.toFixed(2);
-                const qrCodeCanvas = document.getElementById('qr-code');
-                const upiUrl = `upi://pay?pa=cool.vichuvishal4@oksbi&pn=SVMG Supermarket&am=${totalAmount}&cu=INR`;
-                QRCode.toCanvas(qrCodeCanvas, upiUrl, function (error) {
+                const qrSection = document.getElementById('qr-section');
+                if (selectedPayment === 'upi') {
+                    qrSection.style.display = 'block';
+                    updateQR();
+                } else {
+                    qrSection.style.display = 'none';
+                }
+            });
+        });
+
+        // ─── QR Code ───
+        function updateQR() {
+            const canvas = document.getElementById('qr-code');
+            const qrAmount = document.getElementById('qr-amount');
+            qrAmount.textContent = grandTotal.toFixed(2);
+
+            if (grandTotal > 0) {
+                const upiUrl = `upi://pay?pa=cool.vichuvishal4@oksbi&pn=SVMG Supermarket&am=${grandTotal.toFixed(2)}&cu=INR`;
+                QRCode.toCanvas(canvas, upiUrl, { width: 180 }, function(error) {
                     if (error) console.error(error);
                 });
-            } else {
-                qrSection.style.display = 'none';
             }
         }
 
-        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // ─── Auto-fill user info ───
+        async function autoFillUserInfo(user) {
+            const profile = await getUserProfile(user.uid);
+            if (profile) {
+                document.getElementById('cust-name').value = profile.displayName || '';
+                document.getElementById('cust-phone').value = profile.phoneNumber || '';
+                document.getElementById('cust-email').value = profile.email || user.email || '';
+                document.getElementById('cust-address').value = profile.address || '';
+            } else {
+                document.getElementById('cust-email').value = user.email || '';
+            }
+        }
+
+        // ─── Place Order ───
+        document.getElementById('place-order-btn').addEventListener('click', async () => {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const email = document.getElementById('cust-email').value.trim();
+            const address = document.getElementById('cust-address').value.trim();
+
             if (cartItems.length === 0) {
-                alert("Your cart is empty!");
+                showToast("Your cart is empty!", "warning");
+                return;
+            }
+            if (!name || !phone || !address) {
+                showToast("Please fill in Name, Phone, and Address.", "warning");
                 return;
             }
 
-            const paymentMethod = document.getElementById('payment').value;
-            if (paymentMethod === 'upi') {
+            if (selectedPayment === 'upi') {
                 if (!confirm('Have you completed the UPI payment?')) return;
             }
 
             const orderData = {
-                customerName: document.getElementById('name').value,
-                contactEmail: document.getElementById('email').value,
-                shippingAddress: document.getElementById('address').value,
-                contactNumber: document.getElementById('contact').value,
-                paymentMethod: paymentMethod,
+                userId: currentUser ? currentUser.uid : null,
+                customerName: name,
+                customerPhone: phone,
+                contactEmail: email,
+                shippingAddress: address,
+                paymentMethod: selectedPayment,
                 items: cartItems,
                 subtotal: subtotal,
-                tax: tax,
-                total: totalAmount,
-                invoiceNumber: `INV-${Date.now()}`
+                cgst: cgst,
+                sgst: sgst,
+                total: grandTotal
             };
 
+            const btn = document.getElementById('place-order-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
+
             const result = await placeOrder(orderData);
+
             if (result.success) {
-                showInvoice(orderData);
+                showToast("Order placed successfully!", "success");
+                showInvoice({ ...orderData, invoiceNumber: result.invoiceNumber });
                 clearCart();
+                renderCartSummary();
             } else {
-                alert("Error placing order: " + result.error);
+                showToast("Error placing order: " + result.error, "error");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
             }
         });
 
-        function showInvoice(orderData) {
-            document.getElementById('invoice-name').textContent = orderData.customerName;
-            document.getElementById('invoice-address').textContent = orderData.shippingAddress;
-            document.getElementById('invoice-contact').textContent = orderData.contactNumber;
-            document.getElementById('invoice-payment').textContent = orderData.paymentMethod.toUpperCase();
-            document.getElementById('invoice-subtotal').textContent = orderData.subtotal.toFixed(2);
-            document.getElementById('invoice-tax').textContent = orderData.tax.toFixed(2);
-            document.getElementById('invoice-amount').textContent = orderData.total.toFixed(2);
-            document.getElementById('invoice-number').textContent = orderData.invoiceNumber;
-            document.getElementById('invoice-date').textContent = new Date().toLocaleString();
+        // ─── Show Invoice Modal ───
+        function showInvoice(data) {
+            document.getElementById('inv-name').textContent = data.customerName;
+            document.getElementById('inv-phone').textContent = data.customerPhone;
+            document.getElementById('inv-address').textContent = data.shippingAddress;
+            document.getElementById('inv-email').textContent = data.contactEmail || '';
+            document.getElementById('inv-number').textContent = data.invoiceNumber;
+            document.getElementById('inv-date').textContent = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+            
+            const paymentLabels = { upi: 'UPI', credit: 'Credit Card', cod: 'Cash on Delivery' };
+            document.getElementById('inv-payment').textContent = paymentLabels[data.paymentMethod] || data.paymentMethod;
 
-            const invoiceProducts = document.getElementById('invoice-products');
-            invoiceProducts.innerHTML = '';
-            orderData.items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+            const tbody = document.getElementById('inv-items');
+            tbody.innerHTML = '';
+            data.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.quantity}</td>
                     <td>₹${item.price.toFixed(2)}</td>
                     <td>₹${(item.price * item.quantity).toFixed(2)}</td>
                 `;
-                invoiceProducts.appendChild(row);
+                tbody.appendChild(tr);
             });
+
+            document.getElementById('inv-subtotal').textContent = data.subtotal.toFixed(2);
+            document.getElementById('inv-cgst').textContent = data.cgst.toFixed(2);
+            document.getElementById('inv-sgst').textContent = data.sgst.toFixed(2);
+            document.getElementById('inv-grand-total').textContent = data.total.toFixed(2);
 
             document.getElementById('invoice-modal').style.display = 'block';
         }
 
-        window.closeModal = function() {
+        // ─── Close Invoice Modal ───
+        document.getElementById('close-invoice').addEventListener('click', () => {
             document.getElementById('invoice-modal').style.display = 'none';
             window.location.href = 'index.html';
-        }
+        });
 
-        window.printInvoice = function() {
+        // ─── Download Invoice ───
+        document.getElementById('download-invoice-btn').addEventListener('click', () => {
             window.print();
+        });
+
+        // ─── Page Init ───
+        function showState(state) {
+            document.getElementById('empty-cart-state').style.display = 'none';
+            document.getElementById('login-prompt').style.display = 'none';
+            document.getElementById('checkout-content').style.display = 'none';
+
+            if (state === 'empty') {
+                document.getElementById('empty-cart-state').style.display = 'block';
+            } else if (state === 'login') {
+                document.getElementById('login-prompt').style.display = 'block';
+            } else if (state === 'checkout') {
+                document.getElementById('checkout-content').style.display = 'grid';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            displayCartItems();
-            
-            // Handle Auth Link
-            const authLink = document.getElementById('auth-link');
-            if (authLink) {
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        const role = await getUserRole(user.uid);
-                        if (role === 'admin') {
-                            authLink.innerHTML = 'Admin Panel';
-                            authLink.href = 'admin.html';
-                        } else {
-                            authLink.innerHTML = 'Logout';
-                            authLink.href = '#';
-                            authLink.onclick = async (e) => {
-                                e.preventDefault();
-                                await signOut(auth);
-                                window.location.reload();
-                            };
-                        }
+            computeTotals();
+
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+
+                // Nav auth link
+                const authLink = document.getElementById('auth-link');
+                if (user) {
+                    const role = await getUserRole(user.uid);
+                    if (role === 'admin') {
+                        authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
+                        authLink.href = 'admin.html';
                     } else {
-                        authLink.innerHTML = 'Login';
-                        authLink.href = 'login.html';
-                        authLink.onclick = null;
+                        authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                        authLink.href = '#';
+                        authLink.onclick = async (e) => {
+                            e.preventDefault();
+                            await signOut(auth);
+                            window.location.reload();
+                        };
                     }
-                });
-            }
+                } else {
+                    authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    authLink.href = 'login.html';
+                    authLink.onclick = null;
+                }
+
+                // Decide what to show
+                if (cartItems.length === 0) {
+                    showState('empty');
+                } else if (!user) {
+                    showState('login');
+                } else {
+                    showState('checkout');
+                    await autoFillUserInfo(user);
+                    renderCartSummary();
+                }
+            });
+
+            window.addEventListener('cartSynced', () => {
+                computeTotals();
+                if (cartItems.length === 0) {
+                    // Don't switch to empty if invoice is showing
+                    if (document.getElementById('invoice-modal').style.display !== 'block') {
+                        showState('empty');
+                    }
+                }
+            });
         });
     </script>
 </body>

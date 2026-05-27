@@ -17,6 +17,19 @@ export async function getUserRole(uid) {
   return 'user';
 }
 
+// Get full user profile (name, phone, email, role, address)
+export async function getUserProfile(uid) {
+  try {
+    const userDoc = await getDoc(doc(db, "users", uid));
+    if (userDoc.exists()) {
+      return userDoc.data();
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+  return null;
+}
+
 // Login
 export async function loginUser(email, password) {
   try {
@@ -29,8 +42,8 @@ export async function loginUser(email, password) {
   }
 }
 
-// Register
-export async function registerUser(email, password, name, role = 'user') {
+// Register — always registers as 'user' role (no public admin signup)
+export async function registerUser(email, password, name, phone, address = '') {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -39,11 +52,13 @@ export async function registerUser(email, password, name, role = 'user') {
     await setDoc(doc(db, "users", user.uid), {
       email: email,
       displayName: name,
-      role: role,
+      phoneNumber: phone,
+      address: address,
+      role: 'user',
       createdAt: new Date()
     });
     
-    return { success: true, user, role };
+    return { success: true, user, role: 'user' };
   } catch (error) {
     return { success: false, error: error.message };
   }

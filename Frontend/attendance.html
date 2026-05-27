@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attendance Management - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <script src="scripts/theme.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .form-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -90,6 +91,7 @@
   <script type="module">
     import { auth, onAuthStateChanged, signOut, db, collection, getDocs, addDoc, query, orderBy, where } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
+    import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
     onAuthStateChanged(auth, async (user) => {
@@ -99,8 +101,10 @@
       }
       const role = await getUserRole(user.uid);
       if (role !== 'admin') {
-        alert("Access denied. Admins only.");
-        window.location.href = 'index.html';
+        showToast("Access denied. Admins only.", "error");
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
       } else {
         // Set today's date automatically
         document.getElementById('attendance-date').valueAsDate = new Date();
@@ -168,10 +172,10 @@
 
       try {
         await Promise.all(promises);
-        alert("Attendance submitted successfully!");
+        showToast("Attendance submitted successfully!", "success");
         loadAttendance();
       } catch (err) {
-        alert("Failed to save attendance: " + err.message);
+        showToast("Failed to save attendance: " + err.message, "error");
       }
     });
 

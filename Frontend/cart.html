@@ -3,251 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVMG THE DAILY BASKET - Cart</title>
+    <title>EzyCart — Shopping Cart | THE DAILY BASKET</title>
+    <meta name="description" content="Review your shopping cart at EzyCart THE DAILY BASKET.">
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="icon" href="/assets/logo/cart.png">
+    <link rel="icon" href="assets/logo/cart.png">
+    <script src="scripts/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            background-color: #1f2e20;
-            color: #ffffff;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header h1 {
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        nav a {
-            color: #ffffff;
-            text-decoration: none;
-            margin: 0 1rem;
-            font-size: 1rem;
-        }
-
-        nav a:hover {
-            text-decoration: underline;
-        }
-
-        main {
-            padding: 2rem;
-        }
-
-        .cart-section {
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .cart-section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #1f2e20;
-        }
-
-        #cart-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-        }
-
-        #cart-table th, #cart-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        #cart-table th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-        }
-
-        #cart-table tfoot {
-            font-weight: bold;
-        }
-
-        .cart-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cart-actions button {
-            padding: 0.75rem 1.5rem;
-            background-color: #42b83e;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .cart-actions button:hover {
-            background-color: #42b83e;
-        }
-
-        .quantity-adjust {
-            display: inline-flex;
-            gap: 0.5rem;
-        }
-
-        .quantity-adjust button {
-            padding: 0.5rem 1rem;
-            background-color: #42b83e;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .quantity-adjust button:hover {
-            background-color: #42b83e;
-        }
-
-        .cart-item-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .cart-item-actions button {
-            padding: 0.5rem 1rem;
-            background-color: #e74c3c;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .cart-item-actions button:hover {
-            background-color: #c0392b;
-        }
-
-        footer {
-            background-color: #1f2e20;
-            color: #ffffff;
+        .cart-empty {
             text-align: center;
-            padding: 1rem;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
+            padding: 64px 24px;
         }
 
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: center;
-            }
+        .cart-empty .icon-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
 
-            nav {
-                margin-top: 1rem;
-            }
+        .cart-empty h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            text-align: center;
+        }
 
-            .cart-actions {
-                flex-direction: column;
-                align-items: center;
-            }
+        .cart-empty p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
 
-            .cart-actions button {
-                width: 100%;
-                margin: 0.5rem 0;
-            }
+        /* Cart item row animation */
+        #cart-table tbody tr {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        /* Tax preview */
+        .cart-tax-preview {
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: var(--accent-light);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .cart-tax-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .cart-tax-row.total-row {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            border-top: 2px solid var(--accent);
+            margin-top: 8px;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Your Shopping Cart</h1>
+        <h1>EzyCart</h1>
         <nav>
             <a href="index.html">Home</a>
             <a href="categories.html">Categories</a>
-            <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
+            <a href="cart.html" class="active">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
             <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
 
     <main>
-        <section class="cart-section">
-            <h2>Your Cart</h2>
-            <table id="cart-table">
-                <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Quantity</th>
-                        <th>Unit Price (₹)</th>
-                        <th>Subtotal (₹)</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="cart-items">
-                    <!-- Items will be added here dynamically -->
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4">Total Price:</td>
-                        <td>₹<span id="total-price">0.00</span></td>
-                    </tr>
-                </tfoot>
-            </table>
-            <div class="cart-actions">
-                <button id="checkout-button" onclick="goToCheckout()">Proceed to Checkout</button>
-                <button id="clear-cart-button" onclick="handleClearCart()">Clear Cart</button>
+        <h2><i class="fas fa-shopping-cart" style="color: var(--accent); margin-right: 8px;"></i>Your Shopping Cart</h2>
+
+        <div class="cart-section">
+            <!-- Cart Table -->
+            <div id="cart-content">
+                <table id="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Subtotal</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+
+                <!-- Tax Preview -->
+                <div class="cart-tax-preview" id="tax-preview">
+                    <div class="cart-tax-row">
+                        <span>Subtotal</span>
+                        <span>₹<span id="preview-subtotal">0.00</span></span>
+                    </div>
+                    <div class="cart-tax-row">
+                        <span>CGST @ 2.5%</span>
+                        <span>₹<span id="preview-cgst">0.00</span></span>
+                    </div>
+                    <div class="cart-tax-row">
+                        <span>SGST @ 2.5%</span>
+                        <span>₹<span id="preview-sgst">0.00</span></span>
+                    </div>
+                    <div class="cart-tax-row total-row">
+                        <span>Estimated Total</span>
+                        <span>₹<span id="preview-total">0.00</span></span>
+                    </div>
+                </div>
+
+                <div class="cart-actions" style="margin-top: 24px;">
+                    <button class="btn-danger" id="clear-cart-button" onclick="window.handleClearCart()">
+                        <i class="fas fa-trash-alt"></i> Clear Cart
+                    </button>
+                    <button class="btn-lg" id="checkout-button" onclick="window.goToCheckout()">
+                        <i class="fas fa-arrow-right"></i> Proceed to Checkout
+                    </button>
+                </div>
             </div>
-        </section>
+
+            <!-- Empty Cart State -->
+            <div id="empty-state" class="cart-empty" style="display: none;">
+                <div class="icon-wrap">🛒</div>
+                <h3>Your cart is empty</h3>
+                <p>Looks like you haven't added anything yet. Start shopping!</p>
+                <button class="btn-lg" onclick="location.href='categories.html'">
+                    <i class="fas fa-store"></i> Browse Products
+                </button>
+            </div>
+        </div>
     </main>
 
     <footer>
-        <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
+        <p>&copy; 2024 EzyCart THE DAILY BASKET. All rights reserved.</p>
     </footer>
 
-    <!-- Use modular script to manage cart -->
     <script type="module">
         import { getCart, getCartTotal, adjustQuantity, removeFromCart, clearCart, updateCartBadge } from './scripts/cart-manager.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
         import { getUserRole } from './scripts/auth.js';
+        import { showToast } from './scripts/toast.js';
 
         function renderCart() {
             const cartTable = document.getElementById('cart-items');
-            const totalPriceEl = document.getElementById('total-price');
             const cartItems = getCart();
+            const cartContent = document.getElementById('cart-content');
+            const emptyState = document.getElementById('empty-state');
+
+            if (cartItems.length === 0) {
+                cartContent.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                cartContent.style.display = 'block';
+                emptyState.style.display = 'none';
+            }
 
             cartTable.innerHTML = '';
             cartItems.forEach((item) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.name}</td>
+                    <td style="font-weight: 500;">${item.name}</td>
                     <td>
                         <div class="quantity-adjust">
-                            <button onclick="window.handleAdjustQuantity('${item.name}', -1)">-</button>
+                            <button onclick="window.handleAdjustQuantity('${item.name.replace(/'/g, "\\'")}', -1)">−</button>
                             <span>${item.quantity}</span>
-                            <button onclick="window.handleAdjustQuantity('${item.name}', 1)">+</button>
+                            <button onclick="window.handleAdjustQuantity('${item.name.replace(/'/g, "\\'")}', 1)">+</button>
                         </div>
                     </td>
-                    <td>${item.price.toFixed(2)}</td>
-                    <td>${(item.quantity * item.price).toFixed(2)}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td style="font-weight: 600; color: var(--accent);">₹${(item.quantity * item.price).toFixed(2)}</td>
                     <td>
-                        <button class="cart-item-actions" onclick="window.handleRemoveItem('${item.name}')">Remove</button>
+                        <button class="btn-sm btn-danger" onclick="window.handleRemoveItem('${item.name.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
                     </td>
                 `;
                 cartTable.appendChild(row);
             });
-            totalPriceEl.textContent = getCartTotal().toFixed(2);
+
+            // Tax preview
+            const subtotal = getCartTotal();
+            const cgst = subtotal * 0.025;
+            const sgst = subtotal * 0.025;
+            const total = subtotal + cgst + sgst;
+
+            document.getElementById('preview-subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('preview-cgst').textContent = cgst.toFixed(2);
+            document.getElementById('preview-sgst').textContent = sgst.toFixed(2);
+            document.getElementById('preview-total').textContent = total.toFixed(2);
+
             updateCartBadge();
         }
 
@@ -259,19 +214,21 @@
         window.handleRemoveItem = function(name) {
             removeFromCart(name);
             renderCart();
+            showToast('Item removed from cart', 'info');
         }
 
         window.handleClearCart = function() {
-            if (confirm('Are you sure you want to clear the cart?')) {
+            if (confirm('Are you sure you want to clear your entire cart?')) {
                 clearCart();
                 renderCart();
+                showToast('Cart cleared', 'info');
             }
         }
 
         window.goToCheckout = function() {
             const cartItems = getCart();
             if (cartItems.length === 0) {
-                alert('Your cart is empty!');
+                showToast('Your cart is empty!', 'warning');
                 return;
             }
             window.location.href = 'checkout.html';
@@ -279,6 +236,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCart();
+            window.addEventListener('cartSynced', renderCart);
             
             // Handle Auth Link
             const authLink = document.getElementById('auth-link');
@@ -287,10 +245,10 @@
                     if (user) {
                         const role = await getUserRole(user.uid);
                         if (role === 'admin') {
-                            authLink.innerHTML = 'Admin Panel';
+                            authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
                             authLink.href = 'admin.html';
                         } else {
-                            authLink.innerHTML = 'Logout';
+                            authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
                             authLink.href = '#';
                             authLink.onclick = async (e) => {
                                 e.preventDefault();
@@ -299,7 +257,7 @@
                             };
                         }
                     } else {
-                        authLink.innerHTML = 'Login';
+                        authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                         authLink.href = 'login.html';
                         authLink.onclick = null;
                     }
