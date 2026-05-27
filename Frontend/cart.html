@@ -126,7 +126,7 @@
 
         .cart-item-actions button {
             padding: 0.5rem 1rem;
-            background-color: #42b83e;
+            background-color: #e74c3c;
             color: #ffffff;
             border: none;
             border-radius: 5px;
@@ -135,7 +135,7 @@
         }
 
         .cart-item-actions button:hover {
-            background-color: #42b83e;
+            background-color: #c0392b;
         }
 
         footer {
@@ -203,8 +203,8 @@
                 </tfoot>
             </table>
             <div class="cart-actions">
-                <button id="checkout-button" onclick="checkout()">Proceed to Checkout</button>
-                <button id="clear-cart-button" onclick="clearCart()">Clear Cart</button>
+                <button id="checkout-button" onclick="goToCheckout()">Proceed to Checkout</button>
+                <button id="clear-cart-button" onclick="handleClearCart()">Clear Cart</button>
             </div>
         </section>
     </main>
@@ -213,68 +213,62 @@
         <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
     </footer>
 
-    <script>
-        const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+    <!-- Use modular script to manage cart -->
+    <script type="module">
+        import { getCart, getCartTotal, adjustQuantity, removeFromCart, clearCart } from './scripts/cart-manager.js';
 
         function renderCart() {
             const cartTable = document.getElementById('cart-items');
             const totalPriceEl = document.getElementById('total-price');
-            let totalPrice = 0;
+            const cartItems = getCart();
 
             cartTable.innerHTML = '';
-            cartItems.forEach((item, index) => {
+            cartItems.forEach((item) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.name}</td>
                     <td>
                         <div class="quantity-adjust">
-                            <button onclick="adjustQuantity(${index}, -1)">-</button>
+                            <button onclick="window.handleAdjustQuantity('${item.name}', -1)">-</button>
                             <span>${item.quantity}</span>
-                            <button onclick="adjustQuantity(${index}, 1)">+</button>
+                            <button onclick="window.handleAdjustQuantity('${item.name}', 1)">+</button>
                         </div>
                     </td>
                     <td>${item.price.toFixed(2)}</td>
                     <td>${(item.quantity * item.price).toFixed(2)}</td>
                     <td>
-                        <button class="cart-item-actions" onclick="removeItem(${index})">Remove</button>
+                        <button class="cart-item-actions" onclick="window.handleRemoveItem('${item.name}')">Remove</button>
                     </td>
                 `;
                 cartTable.appendChild(row);
-                totalPrice += item.quantity * item.price;
             });
-            totalPriceEl.textContent = totalPrice.toFixed(2);
+            totalPriceEl.textContent = getCartTotal().toFixed(2);
         }
 
-        function checkout() {
+        window.handleAdjustQuantity = function(name, adjustment) {
+            adjustQuantity(name, adjustment);
+            renderCart();
+        }
+
+        window.handleRemoveItem = function(name) {
+            removeFromCart(name);
+            renderCart();
+        }
+
+        window.handleClearCart = function() {
+            if (confirm('Are you sure you want to clear the cart?')) {
+                clearCart();
+                renderCart();
+            }
+        }
+
+        window.goToCheckout = function() {
+            const cartItems = getCart();
             if (cartItems.length === 0) {
                 alert('Your cart is empty!');
                 return;
             }
             window.location.href = 'checkout.html';
-        }
-
-        function clearCart() {
-            if (confirm('Are you sure you want to clear the cart?')) {
-                localStorage.removeItem('cart');
-                cartItems.length = 0;
-                renderCart();
-            }
-        }
-
-        function removeItem(index) {
-            cartItems.splice(index, 1);
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-            renderCart();
-        }
-
-        function adjustQuantity(index, adjustment) {
-            if (cartItems[index].quantity + adjustment > 0) {
-                cartItems[index].quantity += adjustment;
-                localStorage.setItem('cart', JSON.stringify(cartItems));
-                renderCart();
-            } else {
-                alert('Quantity cannot be less than 1');
-            }
         }
 
         document.addEventListener('DOMContentLoaded', renderCart);
