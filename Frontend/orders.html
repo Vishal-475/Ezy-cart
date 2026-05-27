@@ -3,66 +3,142 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders Management</title>
+  <title>Orders Management - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .table-section { margin-top: 20px; }
+    .table-section table { width: 100%; border-collapse: collapse; }
+    .table-section th, .table-section td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+    .table-section th { background: #42b83e; color: white; }
+    .status-dropdown { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+    .btn-update { background: #3498db; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+  </style>
 </head>
 <body>
   <header>
-    <div class="container">
-      <h1>Welcome to <span>Supermarket</span></h1>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+      <h1 style="color:white; margin:0;">EzyCart Admin</h1>
       <nav>
-        <ul>
-          <li><a href="admin.html">Home</a></li>
-          <li><a href="products.html">Products</a></li>
-          <li><a href="orders.html">Orders</a></li>
-          <li><a href="customers.html">Customers</a></li>
-          <li><a href="workers.html">Workers</a></li>
-          <li><a href="attendance.html">Attendance</a></li>
+        <ul style="list-style:none; display:flex; gap:15px; margin:0; padding:0;">
+          <li><a href="admin.html" style="color:white; text-decoration:none;">Dashboard</a></li>
+          <li><a href="products.html" style="color:white; text-decoration:none;">Products</a></li>
+          <li><a href="orders.html" style="color:#08b91f; text-decoration:none; font-weight:bold;">Orders</a></li>
+          <li><a href="customers.html" style="color:white; text-decoration:none;">Customers</a></li>
+          <li><a href="workers.html" style="color:white; text-decoration:none;">Workers</a></li>
+          <li><a href="attendance.html" style="color:white; text-decoration:none;">Attendance</a></li>
+          <li><button onclick="logoutAdmin()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Logout</button></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
-    <!-- Filter Orders -->
-    <section class="form-section">
-      <div class="container">
-        <h2>Filter Orders</h2>
-        <select id="filter-orders">
-          <option value="all">All Orders</option>
-          <option value="yearly">Yearly</option>
-          <option value="monthly">Monthly</option>
-          <option value="weekly">Weekly</option>
-        </select>
-      </div>
-    </section>
+  <main class="container" style="padding: 20px 0;">
+    <h2>Manage Orders</h2>
 
-    <!-- Order List -->
     <section class="table-section">
-      <div class="container">
-        <h2>Order List</h2>
-        <table id="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <table id="orders-table">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Customer Name</th>
+            <th>Contact</th>
+            <th>Payment</th>
+            <th>Amount (₹)</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="orders-list">
+          <tr><td colspan="8" style="text-align:center;">Loading orders...</td></tr>
+        </tbody>
+      </table>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2023 Supermarket. All rights reserved.</p>
-    </div>
-  </footer>
+  <script type="module">
+    import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+    import { getUserRole } from './scripts/auth.js';
+    import { getAllOrders, updateOrderStatus } from './scripts/orders-api.js';
 
-  <script src="scripts/orders.js"></script>
+    // Verify Admin Access
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const role = await getUserRole(user.uid);
+      if (role !== 'admin') {
+        alert("Access denied. Admins only.");
+        window.location.href = 'index.html';
+      } else {
+        loadOrders();
+      }
+    });
+
+    window.logoutAdmin = async function() {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    };
+
+    let ordersList = [];
+
+    async function loadOrders() {
+      ordersList = await getAllOrders();
+      const tbody = document.getElementById('orders-list');
+      tbody.innerHTML = '';
+
+      if (ordersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No orders found</td></tr>';
+        return;
+      }
+
+      ordersList.forEach(order => {
+        const row = document.createElement('tr');
+        const dateStr = new Date(order.createdAt).toLocaleString();
+        
+        row.innerHTML = `
+          <td>${order.invoiceNumber}</td>
+          <td>${order.customerName}</td>
+          <td>${order.contactNumber}<br><small>${order.contactEmail}</small></td>
+          <td>${order.paymentMethod.toUpperCase()}</td>
+          <td>${parseFloat(order.total).toFixed(2)}</td>
+          <td>${dateStr}</td>
+          <td>
+            <select class="status-dropdown" id="status-${order.id}">
+              <option value="confirmed" ${order.orderStatus === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
+              <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn-update" onclick="window.updateStatus('${order.id}')">Update</button>
+            <button onclick="window.viewDetails('${order.id}')" style="margin-left:5px; padding:5px 10px;">Details</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.updateStatus = async function(id) {
+      const newStatus = document.getElementById(`status-${id}`).value;
+      const res = await updateOrderStatus(id, newStatus);
+      if (res.success) {
+        alert("Order status updated successfully!");
+        loadOrders();
+      } else {
+        alert("Failed to update status.");
+      }
+    };
+
+    window.viewDetails = function(id) {
+      const order = ordersList.find(o => o.id === id);
+      if (!order) return;
+      let itemsList = order.items.map(i => `${i.quantity}x ${i.name}`).join('\\n');
+      alert(`Order Items:\\n${itemsList}\\n\\nShipping Address:\\n${order.shippingAddress}`);
+    };
+  </script>
 </body>
 </html>

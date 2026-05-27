@@ -3,35 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Management</title>
+  <title>Attendance Management - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .form-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .table-section table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .table-section th, .table-section td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+    .table-section th { background: #42b83e; color: white; }
+    .btn-submit { background: #42b83e; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-size: 1rem; }
+    .btn-submit:hover { background: #369c32; }
+    .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; color: white; }
+    .badge-present { background: #42b83e; }
+    .badge-absent { background: #e74c3c; }
+  </style>
 </head>
 <body>
   <header>
-    <div class="container">
-      <h1>Supermarket</h1>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+      <h1 style="color:white; margin:0;">EzyCart Admin</h1>
       <nav>
-        <ul>
-          <li><a href="admin.html">Home</a></li>
-          <li><a href="products.html">Products</a></li>
-          <li><a href="orders.html">Orders</a></li>
-          <li><a href="customers.html">Customers</a></li>
-          <li><a href="workers.html">Workers</a></li>
-          <li><a href="attendance.html">Attendance</a></li>
+        <ul style="list-style:none; display:flex; gap:15px; margin:0; padding:0;">
+          <li><a href="admin.html" style="color:white; text-decoration:none;">Dashboard</a></li>
+          <li><a href="products.html" style="color:white; text-decoration:none;">Products</a></li>
+          <li><a href="orders.html" style="color:white; text-decoration:none;">Orders</a></li>
+          <li><a href="customers.html" style="color:white; text-decoration:none;">Customers</a></li>
+          <li><a href="workers.html" style="color:white; text-decoration:none;">Workers</a></li>
+          <li><a href="attendance.html" style="color:#08b91f; text-decoration:none; font-weight:bold;">Attendance</a></li>
+          <li><button onclick="logoutAdmin()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Logout</button></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
-    <!-- Take Attendance -->
+  <main class="container" style="padding: 20px 0;">
+    <h2>Manage Attendance</h2>
+
     <section class="form-section">
-      <div class="container">
-        <h2>Take Attendance</h2>
-        <form id="take-attendance-form">
-          <label for="attendance-date">Date:</label>
-          <input type="date" id="attendance-date" required>
-          <table id="attendance-table">
+      <h3>Take Attendance</h3>
+      <form id="take-attendance-form">
+        <div style="margin-bottom: 15px;">
+          <label for="attendance-date" style="font-weight:bold;">Date:</label>
+          <input type="date" id="attendance-date" required style="padding:8px; border-radius:4px; border:1px solid #ccc;">
+        </div>
+        <div class="table-section">
+          <table id="take-attendance-table">
             <thead>
               <tr>
                 <th>Worker ID</th>
@@ -39,42 +55,164 @@
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody>
-              <!-- Workers will be dynamically added here -->
+            <tbody id="workers-attendance-list">
+              <tr><td colspan="3" style="text-align:center;">Loading workers...</td></tr>
             </tbody>
           </table>
-          <button type="submit">Submit Attendance</button>
-        </form>
-      </div>
+        </div>
+        <button type="submit" class="btn-submit">Submit Attendance</button>
+      </form>
     </section>
 
-    <!-- Attendance Records -->
     <section class="table-section">
-      <div class="container">
-        <h2>Attendance Records</h2>
-        <table id="attendance-records-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Worker ID</th>
-              <th>Name</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Attendance records will be dynamically added here -->
-          </tbody>
-        </table>
+      <h3>Attendance Records</h3>
+      <div style="margin-bottom:15px;">
+        <label for="filter-date" style="font-weight:bold;">Filter by Date: </label>
+        <input type="date" id="filter-date" onchange="loadAttendance()" style="padding:5px;">
+        <button onclick="document.getElementById('filter-date').value=''; loadAttendance();" style="padding:5px;">Clear Filter</button>
       </div>
+      <table id="attendance-records-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Worker ID</th>
+            <th>Name</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="attendance-records-list">
+          <tr><td colspan="4" style="text-align:center;">Loading records...</td></tr>
+        </tbody>
+      </table>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2023 Supermarket. All rights reserved.</p>
-    </div>
-  </footer>
+  <script type="module">
+    import { auth, onAuthStateChanged, signOut, db, collection, getDocs, addDoc, query, orderBy, where } from './scripts/firebase-config.js';
+    import { getUserRole } from './scripts/auth.js';
 
-  <script src="scripts/attendance.js"></script>
+    // Verify Admin Access
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const role = await getUserRole(user.uid);
+      if (role !== 'admin') {
+        alert("Access denied. Admins only.");
+        window.location.href = 'index.html';
+      } else {
+        // Set today's date automatically
+        document.getElementById('attendance-date').valueAsDate = new Date();
+        loadWorkersForAttendance();
+        loadAttendance();
+      }
+    });
+
+    window.logoutAdmin = async function() {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    };
+
+    let workersList = [];
+    const attCol = collection(db, 'attendance');
+
+    async function loadWorkersForAttendance() {
+      try {
+        const snapshot = await getDocs(collection(db, 'workers'));
+        const tbody = document.getElementById('workers-attendance-list');
+        tbody.innerHTML = '';
+
+        if (snapshot.empty) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No workers found. Please add workers first.</td></tr>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const w = doc.data();
+          workersList.push({ id: doc.id, name: w.name });
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><small>${doc.id}</small></td>
+            <td><strong>${w.name}</strong></td>
+            <td>
+              <select class="status-select" data-id="${doc.id}" data-name="${w.name}" style="padding:5px; border-radius:4px;">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Leave">Leave</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('take-attendance-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const date = document.getElementById('attendance-date').value;
+      const selects = document.querySelectorAll('.status-select');
+      
+      let promises = [];
+      selects.forEach(select => {
+        promises.push(addDoc(attCol, {
+          date: date,
+          workerId: select.getAttribute('data-id'),
+          workerName: select.getAttribute('data-name'),
+          status: select.value,
+          recordedAt: new Date().toISOString()
+        }));
+      });
+
+      try {
+        await Promise.all(promises);
+        alert("Attendance submitted successfully!");
+        loadAttendance();
+      } catch (err) {
+        alert("Failed to save attendance: " + err.message);
+      }
+    });
+
+    window.loadAttendance = async function() {
+      try {
+        const filterDate = document.getElementById('filter-date').value;
+        let q;
+        if (filterDate) {
+          q = query(attCol, where('date', '==', filterDate));
+        } else {
+          q = query(attCol, orderBy('date', 'desc'), orderBy('workerName'));
+        }
+
+        const snapshot = await getDocs(q);
+        const tbody = document.getElementById('attendance-records-list');
+        tbody.innerHTML = '';
+
+        if (snapshot.empty) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No records found</td></tr>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const r = doc.data();
+          const row = document.createElement('tr');
+          let badgeClass = '';
+          if (r.status === 'Present') badgeClass = 'badge-present';
+          else if (r.status === 'Absent') badgeClass = 'badge-absent';
+
+          row.innerHTML = `
+            <td>${r.date}</td>
+            <td><small>${r.workerId}</small></td>
+            <td><strong>${r.workerName}</strong></td>
+            <td><span class="badge ${badgeClass}">${r.status}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  </script>
 </body>
 </html>

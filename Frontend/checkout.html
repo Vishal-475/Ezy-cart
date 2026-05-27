@@ -9,7 +9,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
-        /* Updated Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -128,82 +127,17 @@
             background: #e65a3a;
         }
     </style>
-    
-    <!-- Updated Invoice Modal -->
-    <div id="invoice-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <div class="invoice-header">
-                <img src="/assets/logo/cart.png" alt="Company Logo">
-                <h2>Payment Successful! 🎉</h2>
-                <p>Thank you for your purchase!</p>
-            </div>
-            
-            <div class="invoice-details">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <div>
-                        <h3>Bill To:</h3>
-                        <p id="invoice-name"></p>
-                        <p id="invoice-address"></p>
-                        <p id="invoice-contact"></p>
-                    </div>
-                    <div>
-                        <p><strong>Invoice #:</strong> <span id="invoice-number"></span></p>
-                        <p><strong>Date:</strong> <span id="invoice-date"></span></p>
-                        <p><strong>Payment Method:</strong> <span id="invoice-payment"></span></p>
-                    </div>
-                </div>
-    
-                <table class="invoice-table">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoice-products"></tbody>
-                </table>
-    
-                <div class="invoice-totals">
-                    <p><span>Subtotal:</span> <span>₹<span id="invoice-subtotal"></span></span></p>
-                    <p><span>Tax (5%):</span> <span>₹<span id="invoice-tax"></span></span></p>
-                    <p style="font-weight: bold; font-size: 1.2em;">
-                        <span>Total Paid:</span> <span>₹<span id="invoice-amount"></span></span>
-                    </p>
-                </div>
-    
-                <div class="status-badge">Order Confirmed ✔</div>
-    
-                <div class="download-section">
-                    <button class="download-btn" onclick="printInvoice()">Download Invoice</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        function printInvoice() {
-            window.print();
-        }
-    
-        // Add this to your existing placeOrder function
-        function placeOrder(event) {
-            event.preventDefault();
-            // ... existing order processing code ...
-            
-            // Show modal after processing
-            document.getElementById('invoice-modal').style.display = 'block';
-            
-            // Clear cart after showing invoice
-            localStorage.removeItem('cart');
-        }
-    </script>
 </head>
 <body>
     <header>
         <h1>Checkout</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="categories.html">Categories</a>
+            <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
+            <a href="checkout.html">Checkout</a>
+            <a href="login.html" id="auth-link">Login</a>
+        </nav>
     </header>
     <main>
         <section class="checkout-container">
@@ -212,12 +146,6 @@
                 <p>Email: allsupport@svmgthedailybasket.com</p>
                 <p>Phone: +91 7904656748</p>
                 <p>Address: Building 8, Starlight Square, Celestial Drive, 901567</p>
-                <P>  Follow us on :  
-                    <img src="/assets/logo/instagram.png" alt="Instagram" width="6%"> 
-                    <img src="/assets/logo/facebook.png" alt="Facebook" width="6%"> 
-                    <img src="/assets/logo/twitter.png" alt="X" width="6%"> 
-                    <img src="/assets/logo/youtube.png" alt="Youtube" width="6%">
-                </P>
             </div>
 
             <!-- Cart Summary Section -->
@@ -241,19 +169,15 @@
                 <p><strong>Total: ₹<span id="cart-total">0.00</span></strong></p>
             </div>
 
-            <!-- Coupon Code Section -->
-            <div class="coupon-section">
-                <h2>Apply Coupon</h2>
-                <input type="text" id="coupon-code" placeholder="Enter coupon code">
-                <button onclick="applyCoupon()">Apply</button>
-                <p id="coupon-message" style="color: green; font-weight: bold;"></p>
-            </div>
-
-            <form id="checkout-form" onsubmit="placeOrder(event)">
+            <form id="checkout-form">
                 <h2>Shipping & Payment Details</h2>
                 <div class="form-group">
                     <label for="name">Name:</label>
                     <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
                 </div>
                 <div class="form-group">
                     <label for="address">Address:</label>
@@ -275,7 +199,7 @@
                     <canvas id="qr-code"></canvas>
                     <p><strong>Amount: ₹<span id="amount-display">0.00</span></strong></p>
                 </div>
-                <button type="submit">Place Order</button>
+                <button type="submit" id="place-order-btn">Place Order</button>
             </form>
         </section>
 
@@ -283,60 +207,78 @@
         <div id="invoice-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="closeModal()">&times;</span>
-                <section id="invoice-section">
-                    <h2>Invoice</h2>
-                    <div class="invoice-header">
-                        <p><strong>S V M G Supermarket</strong></p>
-                        <p>Building 8, Starlight Square, Celestial Drive, 901567</p>
-                        <p>Tel: +91 7904656748</p>
-                        <p>Invoice #: <span id="invoice-number"></span></p>
-                        <p>Date: <span id="invoice-date"></span></p>
+                <div class="invoice-header">
+                    <img src="/assets/logo/cart.png" alt="Company Logo">
+                    <h2>Payment Successful! 🎉</h2>
+                    <p>Thank you for your purchase!</p>
+                </div>
+                
+                <div class="invoice-details">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <h3>Bill To:</h3>
+                            <p id="invoice-name"></p>
+                            <p id="invoice-address"></p>
+                            <p id="invoice-contact"></p>
+                        </div>
+                        <div>
+                            <p><strong>Invoice #:</strong> <span id="invoice-number"></span></p>
+                            <p><strong>Date:</strong> <span id="invoice-date"></span></p>
+                            <p><strong>Payment Method:</strong> <span id="invoice-payment"></span></p>
+                        </div>
                     </div>
-                    <hr>
-                    <p><strong>Name:</strong> <span id="invoice-name"></span></p>
-                    <p><strong>Address:</strong> <span id="invoice-address"></span></p>
-                    <p><strong>Contact Number:</strong> <span id="invoice-contact"></span></p>
-                    <p><strong>Payment Method:</strong> 79046<span id="invoice-payment"></span></p>
+        
                     <table class="invoice-table">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
+                                <th>Item</th>
+                                <th>Qty</th>
                                 <th>Price</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="invoice-products"></tbody>
                     </table>
-                    <hr>
-                    <div class="invoice-footer">
-                        <p><strong>Subtotal:</strong> ₹<span id="invoice-subtotal"></span></p>
-                        <p><strong>Tax (5%):</strong> ₹<span id="invoice-tax"></span></p>
-                        <p><strong>Total Amount Paid:</strong> ₹<span id="invoice-amount"></span></p>
+        
+                    <div class="invoice-totals">
+                        <p><span>Subtotal:</span> <span>₹<span id="invoice-subtotal"></span></span></p>
+                        <p><span>Tax (5%):</span> <span>₹<span id="invoice-tax"></span></span></p>
+                        <p style="font-weight: bold; font-size: 1.2em;">
+                            <span>Total Paid:</span> <span>₹<span id="invoice-amount"></span></span>
+                        </p>
                     </div>
-                    <p><strong>Order Status:</strong> Confirmed</p>
-                </section>
+        
+                    <div class="status-badge">Order Confirmed ✔</div>
+        
+                    <div class="download-section">
+                        <button class="download-btn" onclick="printInvoice()">Download Invoice</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <button onclick="logout()" class="logout-button">Logout</button>
     </main>
 
-    <script>
-        const cart = JSON.parse(localStorage.getItem('cart')) || []; // Retrieve cart data from localStorage
-        let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0); // Calculate subtotal
-        let tax = subtotal * 0.05; // Calculate tax (5%)
-        let totalAmount = subtotal + tax; // Calculate total amount
+    <script type="module">
+        import { getCart, getCartTotal, clearCart, updateCartBadge } from './scripts/cart-manager.js';
+        import { placeOrder } from './scripts/orders-api.js';
+        import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+        import { getUserRole } from './scripts/auth.js';
 
-        if (!sessionStorage.getItem('username')) {
-            window.location.href = 'login.html';
-        }
+        let cartItems = [];
+        let subtotal = 0;
+        let tax = 0;
+        let totalAmount = 0;
 
-        // Display Cart Items
         function displayCartItems() {
-            const cartItems = document.getElementById('cart-items');
-            cartItems.innerHTML = '';
-            cart.forEach(item => {
+            cartItems = getCart();
+            subtotal = getCartTotal();
+            tax = subtotal * 0.05;
+            totalAmount = subtotal + tax;
+
+            const cartTable = document.getElementById('cart-items');
+            cartTable.innerHTML = '';
+            cartItems.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.name}</td>
@@ -344,37 +286,16 @@
                     <td>₹${item.price.toFixed(2)}</td>
                     <td>₹${(item.price * item.quantity).toFixed(2)}</td>
                 `;
-                cartItems.appendChild(row);
+                cartTable.appendChild(row);
             });
 
             document.getElementById('cart-subtotal').textContent = subtotal.toFixed(2);
             document.getElementById('cart-tax').textContent = tax.toFixed(2);
             document.getElementById('cart-total').textContent = totalAmount.toFixed(2);
+            updateCartBadge();
         }
 
-        // Apply Coupon
-        function applyCoupon() {
-            const couponCode = document.getElementById('coupon-code').value;
-            const couponMessage = document.getElementById('coupon-message');
-
-            // Example coupon code: "DISCOUNT10"
-            if (couponCode === "DISCOUNT10") {
-                const discount = subtotal * 0.1; // 10% discount
-                subtotal -= discount;
-                tax = subtotal * 0.05;
-                totalAmount = subtotal + tax;
-
-                couponMessage.textContent = "Coupon applied! You saved ₹" + discount.toFixed(2);
-                displayCartItems(); // Update cart totals
-            } else {
-                couponMessage.textContent = "Invalid coupon code.";
-            }
-        }
-
-        // Display cart items on page load
-        displayCartItems();
-
-        function toggleQRCode() {
+        window.toggleQRCode = function() {
             const paymentMethod = document.getElementById('payment').value;
             const qrSection = document.getElementById('qr-code-section');
             const amountDisplay = document.getElementById('amount-display');
@@ -382,10 +303,8 @@
             if (paymentMethod === 'upi') {
                 qrSection.style.display = 'block';
                 amountDisplay.textContent = totalAmount.toFixed(2);
-
-                // Generate QR Code
                 const qrCodeCanvas = document.getElementById('qr-code');
-                const upiUrl = `upi://pay?pa=cool.vichuvishal4@oksbi&pn= S V M G supermarket&am=${totalAmount}&cu=INR`;
+                const upiUrl = `upi://pay?pa=cool.vichuvishal4@oksbi&pn=SVMG Supermarket&am=${totalAmount}&cu=INR`;
                 QRCode.toCanvas(qrCodeCanvas, upiUrl, function (error) {
                     if (error) console.error(error);
                 });
@@ -394,34 +313,54 @@
             }
         }
 
-        function placeOrder(event) {
-            event.preventDefault();
-
-            const name = document.getElementById('name').value;
-            const address = document.getElementById('address').value;
-            const contact = document.getElementById('contact').value;
-            const paymentMethod = document.getElementById('payment').value;
-
-            if (paymentMethod === 'upi') {
-                const userConfirmed = confirm('Have you completed the UPI payment?');
-                if (!userConfirmed) {
-                    alert('Please complete the payment to proceed.');
-                    return;
-                }
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (cartItems.length === 0) {
+                alert("Your cart is empty!");
+                return;
             }
 
-            // Display Invoice
-            document.getElementById('invoice-name').textContent = name;
-            document.getElementById('invoice-address').textContent = address;
-            document.getElementById('invoice-contact').textContent = contact;
-            document.getElementById('invoice-payment').textContent = paymentMethod === 'upi' ? 'UPI' : 'Credit Card';
-            document.getElementById('invoice-subtotal').textContent = subtotal.toFixed(2);
-            document.getElementById('invoice-tax').textContent = tax.toFixed(2);
-            document.getElementById('invoice-amount').textContent = totalAmount.toFixed(2);
+            const paymentMethod = document.getElementById('payment').value;
+            if (paymentMethod === 'upi') {
+                if (!confirm('Have you completed the UPI payment?')) return;
+            }
+
+            const orderData = {
+                customerName: document.getElementById('name').value,
+                contactEmail: document.getElementById('email').value,
+                shippingAddress: document.getElementById('address').value,
+                contactNumber: document.getElementById('contact').value,
+                paymentMethod: paymentMethod,
+                items: cartItems,
+                subtotal: subtotal,
+                tax: tax,
+                total: totalAmount,
+                invoiceNumber: `INV-${Date.now()}`
+            };
+
+            const result = await placeOrder(orderData);
+            if (result.success) {
+                showInvoice(orderData);
+                clearCart();
+            } else {
+                alert("Error placing order: " + result.error);
+            }
+        });
+
+        function showInvoice(orderData) {
+            document.getElementById('invoice-name').textContent = orderData.customerName;
+            document.getElementById('invoice-address').textContent = orderData.shippingAddress;
+            document.getElementById('invoice-contact').textContent = orderData.contactNumber;
+            document.getElementById('invoice-payment').textContent = orderData.paymentMethod.toUpperCase();
+            document.getElementById('invoice-subtotal').textContent = orderData.subtotal.toFixed(2);
+            document.getElementById('invoice-tax').textContent = orderData.tax.toFixed(2);
+            document.getElementById('invoice-amount').textContent = orderData.total.toFixed(2);
+            document.getElementById('invoice-number').textContent = orderData.invoiceNumber;
+            document.getElementById('invoice-date').textContent = new Date().toLocaleString();
 
             const invoiceProducts = document.getElementById('invoice-products');
             invoiceProducts.innerHTML = '';
-            cart.forEach(item => {
+            orderData.items.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.name}</td>
@@ -432,29 +371,47 @@
                 invoiceProducts.appendChild(row);
             });
 
-            // Generate unique invoice number and date
-            document.getElementById('invoice-number').textContent = `INV-${Date.now()}`;
-            document.getElementById('invoice-date').textContent = new Date().toLocaleString();
-
-            // Clear cart data
-            localStorage.removeItem('cart');
-
-            // Show modal
             document.getElementById('invoice-modal').style.display = 'block';
-
-            alert('Order placed successfully!');
         }
 
-        function closeModal() {
+        window.closeModal = function() {
             document.getElementById('invoice-modal').style.display = 'none';
+            window.location.href = 'index.html';
         }
 
-        function logout() {
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('role');
-            localStorage.removeItem('cart');
-            window.location.href = 'login.html';
+        window.printInvoice = function() {
+            window.print();
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCartItems();
+            
+            // Handle Auth Link
+            const authLink = document.getElementById('auth-link');
+            if (authLink) {
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        const role = await getUserRole(user.uid);
+                        if (role === 'admin') {
+                            authLink.innerHTML = 'Admin Panel';
+                            authLink.href = 'admin.html';
+                        } else {
+                            authLink.innerHTML = 'Logout';
+                            authLink.href = '#';
+                            authLink.onclick = async (e) => {
+                                e.preventDefault();
+                                await signOut(auth);
+                                window.location.reload();
+                            };
+                        }
+                    } else {
+                        authLink.innerHTML = 'Login';
+                        authLink.href = 'login.html';
+                        authLink.onclick = null;
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

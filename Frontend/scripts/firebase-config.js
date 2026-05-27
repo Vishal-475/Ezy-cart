@@ -8,12 +8,12 @@ import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, a
 // 3. Click the Web icon (</>) to add an app
 // 4. Copy the config object below
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD48ZZ8utJIB1s0IWHH5mlO6Nj7RWh6k_Q",
+  authDomain: "ezycart-f3663.firebaseapp.com",
+  projectId: "ezycart-f3663",
+  storageBucket: "ezycart-f3663.firebasestorage.app",
+  messagingSenderId: "60410858245",
+  appId: "1:60410858245:web:e0ca4a3b7ce19b695a456c"
 };
 
 // Initialize Firebase

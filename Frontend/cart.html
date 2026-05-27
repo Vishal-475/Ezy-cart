@@ -175,7 +175,10 @@
         <h1>Your Shopping Cart</h1>
         <nav>
             <a href="index.html">Home</a>
+            <a href="categories.html">Categories</a>
+            <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
+            <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
 
@@ -215,7 +218,9 @@
 
     <!-- Use modular script to manage cart -->
     <script type="module">
-        import { getCart, getCartTotal, adjustQuantity, removeFromCart, clearCart } from './scripts/cart-manager.js';
+        import { getCart, getCartTotal, adjustQuantity, removeFromCart, clearCart, updateCartBadge } from './scripts/cart-manager.js';
+        import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+        import { getUserRole } from './scripts/auth.js';
 
         function renderCart() {
             const cartTable = document.getElementById('cart-items');
@@ -243,6 +248,7 @@
                 cartTable.appendChild(row);
             });
             totalPriceEl.textContent = getCartTotal().toFixed(2);
+            updateCartBadge();
         }
 
         window.handleAdjustQuantity = function(name, adjustment) {
@@ -271,7 +277,35 @@
             window.location.href = 'checkout.html';
         }
 
-        document.addEventListener('DOMContentLoaded', renderCart);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCart();
+            
+            // Handle Auth Link
+            const authLink = document.getElementById('auth-link');
+            if (authLink) {
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        const role = await getUserRole(user.uid);
+                        if (role === 'admin') {
+                            authLink.innerHTML = 'Admin Panel';
+                            authLink.href = 'admin.html';
+                        } else {
+                            authLink.innerHTML = 'Logout';
+                            authLink.href = '#';
+                            authLink.onclick = async (e) => {
+                                e.preventDefault();
+                                await signOut(auth);
+                                window.location.reload();
+                            };
+                        }
+                    } else {
+                        authLink.innerHTML = 'Login';
+                        authLink.href = 'login.html';
+                        authLink.onclick = null;
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -3,91 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supermarket - Your One-Stop Shop</title>
+  <title>EzyCart - Admin Dashboard</title>
   <link rel="stylesheet" href="styles/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 40px;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .stat-card h3 { margin-bottom: 15px; color: #333; }
+    .stat-card .count { font-size: 2.5rem; color: #42b83e; font-weight: bold; }
+    .action-btn { margin-top: 20px; padding: 10px 20px; background: #42b83e; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .action-btn:hover { background: #369c32; }
+  </style>
 </head>
 <body>
   <!-- Header -->
   <header>
-    <div class="container">
-      <h1>SUPERMARKET</h1>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+      <h1 style="color:white; margin:0;">EzyCart Admin</h1>
       <nav>
-        <ul>
-          <li><a href="admin.html">Home</a></li>
-          <li><a href="products.html">Products</a></li>
-          <li><a href="orders.html">Orders</a></li>
-          <li><a href="customers.html">Customers</a></li>
-          <li><a href="workers.html">Workers</a></li>
-          <li><a href="attendance.html">Attendance</a></li>
+        <ul style="list-style:none; display:flex; gap:15px; margin:0; padding:0;">
+          <li><a href="admin.html" style="color:white; text-decoration:none;">Dashboard</a></li>
+          <li><a href="products.html" style="color:white; text-decoration:none;">Products</a></li>
+          <li><a href="orders.html" style="color:white; text-decoration:none;">Orders</a></li>
+          <li><a href="customers.html" style="color:white; text-decoration:none;">Customers</a></li>
+          <li><a href="workers.html" style="color:white; text-decoration:none;">Workers</a></li>
+          <li><a href="attendance.html" style="color:white; text-decoration:none;">Attendance</a></li>
+          <li><button onclick="logoutAdmin()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Logout</button></li>
         </ul>
       </nav>
     </div>
   </header>
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <h2>Your One-Stop Shop for Everything</h2>
-      <a href="products.html" class="cta-button">Explore Products</a>
-    </div>
-  </section>
 
-  <!-- Features Section -->
-  <section class="features">
-    <div class="container">
-      <div class="feature-card">
-        <i class="fas fa-shopping-cart"></i>
-        <h3>Wide Range of Products</h3>
-        <p>From groceries to electronics, we have everything you need.</p>
+  <main>
+    <h2 style="text-align: center; margin-top: 40px;">System Overview</h2>
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <h3>Total Products</h3>
+        <div class="count" id="product-count">...</div>
+        <button class="action-btn" onclick="location.href='products.html'">Manage Products</button>
       </div>
-      <div class="feature-card">
-        <i class="fas fa-truck"></i>
-        <h3>Fast Delivery</h3>
-        <p>Get your orders delivered to your doorstep quickly.</p>
+      <div class="stat-card">
+        <h3>Total Orders</h3>
+        <div class="count" id="order-count">...</div>
+        <button class="action-btn" onclick="location.href='orders.html'">View Orders</button>
       </div>
-      <div class="feature-card">
-        <i class="fas fa-headset"></i>
-        <h3>24/7 Support</h3>
-        <p>Our support team is always ready to assist you.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="testimonials">
-    <div class="container">
-      <h2>What Our Customers Say</h2>
-      <div class="testimonial-card">
-        <p>"The best supermarket I've ever shopped at! Great prices and excellent service."</p>
-        <span>- John Doe</span>
-      </div>
-      <div class="testimonial-card">
-        <p>"Fast delivery and high-quality products. Highly recommended!"</p>
-        <span>- Jane Smith</span>
+      <div class="stat-card">
+        <h3>Registered Customers</h3>
+        <div class="count" id="customer-count">...</div>
+        <button class="action-btn" onclick="location.href='customers.html'">View Customers</button>
       </div>
     </div>
-  </section>
+  </main>
 
   <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>Contact Us</h3>
-          <p>Email: support@supermarket.com</p>
-          <p>Phone: +123 456 7890</p>
-        </div>
-        <div class="footer-section">
-          <h3>Follow Us</h3>
-          <div class="social-icons">
-            <a href="#"><i class="fab fa-facebook"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-          </div>
-        </div>
-      </div>
-      <p class="footer-bottom">&copy; 2023 Supermarket. All rights reserved.</p>
-    </div>
+  <footer style="text-align:center; padding:20px; background:#1f2e20; color:white; position:fixed; bottom:0; width:100%;">
+    <p>&copy; 2024 EzyCart Admin Panel. All rights reserved.</p>
   </footer>
+
+  <script type="module">
+    import { auth, onAuthStateChanged, signOut, db, collection, getDocs } from './scripts/firebase-config.js';
+    import { getUserRole } from './scripts/auth.js';
+
+    async function loadStats() {
+      try {
+        const prodSnap = await getDocs(collection(db, 'products'));
+        document.getElementById('product-count').textContent = prodSnap.docs.filter(d => d.data().isActive !== false).length;
+
+        const orderSnap = await getDocs(collection(db, 'orders'));
+        document.getElementById('order-count').textContent = orderSnap.docs.length;
+
+        const userSnap = await getDocs(collection(db, 'users'));
+        document.getElementById('customer-count').textContent = userSnap.docs.filter(d => d.data().role !== 'admin').length;
+      } catch (e) {
+        console.error("Error loading stats", e);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const role = await getUserRole(user.uid);
+      if (role !== 'admin') {
+        alert("Access denied. Admins only.");
+        window.location.href = 'index.html';
+      } else {
+        loadStats();
+      }
+    });
+
+    window.logoutAdmin = async function() {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    };
+  </script>
 </body>
 </html>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVMG THE DAILY BASKET - Home</title>
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="icon" href="supermarket-website/assets/logo/cart.png">
+    <link rel="icon" href="/assets/logo/cart.png">
     <!-- Google Font: Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
@@ -201,6 +201,7 @@
             <a href="categories.html">Categories</a>
             <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
+            <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
 
@@ -236,7 +237,7 @@
                 <div class="category-item">
                     <h3>Fruits & Vegetables</h3>
                     <p>Fresh and organic produce sourced locally.</p>
-                    <img src="\assets\img\fruits .png" alt="Fruits & Vegetables">
+                    <img src="/assets/img/fruits .png" alt="Fruits & Vegetables">
                 </div>
                 <div class="category-item">
                     <h3>Dairy Products</h3>
@@ -261,6 +262,37 @@
         <p>&copy; 2024 SVMG THE DAILY BASKET. All rights reserved.</p>
     </footer>
 
-    <script src="scripts/script.js"></script>
+    <script type="module">
+        import { updateCartBadge } from './scripts/cart-manager.js';
+        import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+        import { getUserRole } from './scripts/auth.js';
+
+        // Update cart badge
+        updateCartBadge();
+
+        // Handle Auth Link
+        const authLink = document.getElementById('auth-link');
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const role = await getUserRole(user.uid);
+                if (role === 'admin') {
+                    authLink.innerHTML = 'Admin Panel';
+                    authLink.href = 'admin.html';
+                } else {
+                    authLink.innerHTML = 'Logout';
+                    authLink.href = '#';
+                    authLink.onclick = async (e) => {
+                        e.preventDefault();
+                        await signOut(auth);
+                        window.location.reload();
+                    };
+                }
+            } else {
+                authLink.innerHTML = 'Login';
+                authLink.href = 'login.html';
+                authLink.onclick = null;
+            }
+        });
+    </script>
 </body>
 </html>

@@ -3,66 +3,177 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Products Management</title>
+  <title>Manage Products - Admin</title>
   <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .form-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .form-grid input, .form-grid select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .form-grid button { grid-column: span 2; padding: 10px; background: #42b83e; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    .table-section table { width: 100%; border-collapse: collapse; }
+    .table-section th, .table-section td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+    .table-section th { background: #42b83e; color: white; }
+    .btn-edit { background: #f39c12; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .btn-delete { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+  </style>
 </head>
 <body>
   <header>
-    <div class="container">
-      <h1>Welcome to <span>Supermarket</span></h1>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+      <h1 style="color:white; margin:0;">EzyCart Admin</h1>
       <nav>
-        <ul>
-          <li><a href="admin.html">Home</a></li>
-          <li><a href="products.html">Products</a></li>
-          <li><a href="orders.html">Orders</a></li>
-          <li><a href="customers.html">Customers</a></li>
-          <li><a href="workers.html">Workers</a></li>
-          <li><a href="attendance.html">Attendance</a></li>
+        <ul style="list-style:none; display:flex; gap:15px; margin:0; padding:0;">
+          <li><a href="admin.html" style="color:white; text-decoration:none;">Dashboard</a></li>
+          <li><a href="products.html" style="color:#08b91f; text-decoration:none; font-weight:bold;">Products</a></li>
+          <li><a href="orders.html" style="color:white; text-decoration:none;">Orders</a></li>
+          <li><a href="customers.html" style="color:white; text-decoration:none;">Customers</a></li>
+          <li><a href="workers.html" style="color:white; text-decoration:none;">Workers</a></li>
+          <li><a href="attendance.html" style="color:white; text-decoration:none;">Attendance</a></li>
+          <li><button onclick="logoutAdmin()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Logout</button></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
-    <!-- Add Product Form -->
+  <main class="container" style="padding: 20px 0;">
+    <h2>Manage Products</h2>
+    
     <section class="form-section">
-      <div class="container">
-        <h2>Add Product</h2>
-        <form id="add-product-form">
-          <input type="text" id="product-name" placeholder="Product Name" required>
-          <input type="number" id="product-price" placeholder="Price" required>
-          <input type="number" id="product-stock" placeholder="Stock" required>
-          <button type="submit">Add Product</button>
-        </form>
-      </div>
+      <h3>Add New Product</h3>
+      <form id="add-product-form" class="form-grid">
+        <input type="text" id="p-name" placeholder="Product Name" required>
+        <input type="number" id="p-price" placeholder="Price (₹)" step="0.01" required>
+        <select id="p-category" required>
+          <option value="">Select Category</option>
+          <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+          <option value="Dairy/Fresh Meats & Seafood">Dairy/Fresh Meats & Seafood</option>
+          <option value="Snacks">Snacks</option>
+          <option value="Beverages">Beverages</option>
+        </select>
+        <input type="text" id="p-unit" placeholder="Unit (e.g. kg, liter, pack)" required>
+        <input type="number" id="p-stock" placeholder="Stock Quantity" required>
+        <input type="text" id="p-image" placeholder="Image URL (e.g. /assets/img/apple.png)">
+        <button type="submit">Add Product</button>
+      </form>
     </section>
 
-    <!-- Product List -->
     <section class="table-section">
-      <div class="container">
-        <h2>Product List</h2>
-        <table id="products-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <table id="products-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price (₹)</th>
+            <th>Unit</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="products-list">
+          <tr><td colspan="7" style="text-align:center;">Loading products...</td></tr>
+        </tbody>
+      </table>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2023 Supermarket. All rights reserved.</p>
-    </div>
-  </footer>
+  <script type="module">
+    import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+    import { getUserRole } from './scripts/auth.js';
+    import { getAllProducts, addProduct, deleteProduct, updateProduct } from './scripts/products-api.js';
 
-  <script src="scripts/products.js"></script>
+    // Verify Admin Access
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const role = await getUserRole(user.uid);
+      if (role !== 'admin') {
+        alert("Access denied. Admins only.");
+        window.location.href = 'index.html';
+      } else {
+        loadProducts();
+      }
+    });
+
+    window.logoutAdmin = async function() {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    };
+
+    let productsList = [];
+
+    async function loadProducts() {
+      productsList = await getAllProducts();
+      const tbody = document.getElementById('products-list');
+      tbody.innerHTML = '';
+
+      if (productsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products found</td></tr>';
+        return;
+      }
+
+      productsList.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><img src="${p.image || '/assets/logo/cart.png'}" width="50" style="object-fit:cover;"></td>
+          <td>${p.name}</td>
+          <td>${p.category}</td>
+          <td>${parseFloat(p.price).toFixed(2)}</td>
+          <td>${p.unit}</td>
+          <td>${p.stock || 0}</td>
+          <td>
+            <button class="btn-edit" onclick="window.editProduct('${p.id}')">Edit</button>
+            <button class="btn-delete" onclick="window.removeProduct('${p.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newProduct = {
+        name: document.getElementById('p-name').value,
+        price: parseFloat(document.getElementById('p-price').value),
+        category: document.getElementById('p-category').value,
+        unit: document.getElementById('p-unit').value,
+        stock: parseInt(document.getElementById('p-stock').value),
+        image: document.getElementById('p-image').value || '/assets/logo/cart.png'
+      };
+
+      const res = await addProduct(newProduct);
+      if (res.success) {
+        alert("Product added successfully!");
+        document.getElementById('add-product-form').reset();
+        loadProducts();
+      } else {
+        alert("Error adding product: " + res.error);
+      }
+    });
+
+    window.removeProduct = async function(id) {
+      if (confirm("Are you sure you want to remove this product?")) {
+        await deleteProduct(id);
+        loadProducts();
+      }
+    };
+
+    window.editProduct = async function(id) {
+      const product = productsList.find(p => p.id === id);
+      if (!product) return;
+      
+      const newPrice = prompt("Enter new price:", product.price);
+      if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+        const newStock = prompt("Enter new stock:", product.stock || 0);
+        if (newStock !== null && !isNaN(parseInt(newStock))) {
+          await updateProduct(id, { price: parseFloat(newPrice), stock: parseInt(newStock) });
+          loadProducts();
+        }
+      }
+    };
+  </script>
 </body>
 </html>
