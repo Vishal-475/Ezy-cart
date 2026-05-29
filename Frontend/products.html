@@ -57,19 +57,8 @@
         </select>
         <input type="text" id="p-unit" placeholder="Unit (e.g. kg, liter, pack)" required>
         <input type="number" id="p-stock" placeholder="Stock Quantity" required>
-        <div style="grid-column: span 2; display: flex; gap: 12px; align-items: center;">
-            <label style="flex: 1; cursor: pointer; padding: 10px; background: #e2e8f0; border: 2px dashed #94a3b8; border-radius: 4px; text-align: center; transition: border-color 0.2s;" id="upload-label">
-                <i class="fas fa-cloud-upload-alt"></i> Choose Image or enter URL
-                <input type="file" id="p-image-file" accept="image/*" style="display: none;">
-            </label>
-            <span style="color: #94a3b8;">OR</span>
-            <input type="text" id="p-image" placeholder="Paste Image URL" style="flex: 1;">
-        </div>
-        <div id="upload-preview" style="grid-column: span 2; display: none; text-align: center;">
-            <img id="preview-img" src="" alt="Preview" style="max-height: 120px; border-radius: 8px; margin: 8px auto;">
-            <p id="upload-status" style="font-size: 0.85rem; color: #10b981;"></p>
-        </div>
-        <button type="submit" id="add-product-btn">Add Product</button>
+        <input type="text" id="p-image" placeholder="Image URL (e.g. /assets/img/apple.png)">
+        <button type="submit">Add Product</button>
       </form>
     </section>
 
@@ -96,7 +85,7 @@
   <script type="module">
     import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
-    import { getAllProducts, addProduct, deleteProduct, updateProduct, uploadProductImage } from './scripts/products-api.js';
+    import { getAllProducts, addProduct, deleteProduct, updateProduct } from './scripts/products-api.js';
     import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
@@ -151,65 +140,25 @@
       });
     }
 
-    // File preview
-    document.getElementById('p-image-file').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('preview-img').src = ev.target.result;
-                document.getElementById('upload-preview').style.display = 'block';
-                document.getElementById('upload-status').textContent = `Selected: ${file.name}`;
-                document.getElementById('upload-label').innerHTML = `<i class="fas fa-check-circle" style="color: #10b981;"></i> ${file.name}`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
     document.getElementById('add-product-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('add-product-btn');
-      btn.disabled = true;
-      btn.textContent = 'Uploading...';
-
-      let imageUrl = document.getElementById('p-image').value || '';
-
-      // If a file was selected, upload it first
-      const fileInput = document.getElementById('p-image-file');
-      if (fileInput.files.length > 0) {
-          const uploadResult = await uploadProductImage(fileInput.files[0]);
-          if (uploadResult.success) {
-              imageUrl = uploadResult.url;
-              document.getElementById('upload-status').textContent = '✔ Uploaded successfully!';
-          } else {
-              showToast('Image upload failed: ' + uploadResult.error, 'error');
-              btn.disabled = false;
-              btn.textContent = 'Add Product';
-              return;
-          }
-      }
-
       const newProduct = {
         name: document.getElementById('p-name').value,
         price: parseFloat(document.getElementById('p-price').value),
         category: document.getElementById('p-category').value,
         unit: document.getElementById('p-unit').value,
         stock: parseInt(document.getElementById('p-stock').value),
-        image: imageUrl || '/assets/logo/cart.png'
+        image: document.getElementById('p-image').value || '/assets/logo/cart.png'
       };
 
       const res = await addProduct(newProduct);
       if (res.success) {
-        showToast('Product added successfully!', 'success');
+        showToast("Product added successfully!", "success");
         document.getElementById('add-product-form').reset();
-        document.getElementById('upload-preview').style.display = 'none';
-        document.getElementById('upload-label').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Choose Image or enter URL';
         loadProducts();
       } else {
-        showToast('Error adding product: ' + res.error, 'error');
+        showToast("Error adding product: " + res.error, "error");
       }
-      btn.disabled = false;
-      btn.textContent = 'Add Product';
     });
 
     window.removeProduct = async function(id) {

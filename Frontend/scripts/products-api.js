@@ -1,20 +1,6 @@
-import { db, collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, storage, storageRef, uploadBytes, getDownloadURL } from './firebase-config.js';
+import { db, collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where } from './firebase-config.js';
 
 const productsCollection = collection(db, 'products');
-
-// Upload product image to Firebase Storage and return the download URL
-export async function uploadProductImage(file) {
-    try {
-        const fileName = `products/${Date.now()}_${file.name}`;
-        const fileRef = storageRef(storage, fileName);
-        const snapshot = await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        return { success: true, url: downloadURL };
-    } catch (error) {
-        console.error("Image upload error:", error);
-        return { success: false, error: error.message };
-    }
-}
 
 export async function getAllProducts(categoryFilter = null) {
     try {
