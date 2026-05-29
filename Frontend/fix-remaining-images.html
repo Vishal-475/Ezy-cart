@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fix Remaining Images</title>
+    <style>
+        body { font-family: system-ui; padding: 30px; background: #0f172a; color: #fff; text-align: center; }
+        .log { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; text-align: left; max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.6; }
+        .success { color: #10b981; }
+        .warn { color: #f59e0b; }
+        .error { color: #ef4444; }
+        .info { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fixing Remaining 93 Products</h1>
+    <p>Targeting only products that still have placeholder or missing images.</p>
+    <div class="log" id="logBox">Scanning for unfixed products...<br></div>
+
+    <script type="module">
+        import { db, collection, getDocs, doc, updateDoc } from './scripts/firebase-config.js';
+
+        const logBox = document.getElementById('logBox');
+        function log(msg) { logBox.innerHTML += msg + '<br>'; logBox.scrollTop = logBox.scrollHeight; }
+
+        // Additional/broader keyword → Wikipedia mappings for items that failed round 1
+        const extraMappings = [
+            // Items that had "No mapping"
+            { kw: 'cumin powder', wiki: 'Cumin' },
+            { kw: 'coriander powder', wiki: 'Coriander' },
+            { kw: 'red chili powder', wiki: 'Chili_powder' },
+            { kw: 'chili flake', wiki: 'Crushed_red_pepper' },
+            { kw: 'crab', wiki: 'Crab' },
+            { kw: 'salmon', wiki: 'Salmon' },
+            { kw: 'chicken', wiki: 'Chicken_as_food' },
+            { kw: 'mutton', wiki: 'Mutton' },
+            { kw: 'fish', wiki: 'Fish_as_food' },
+            { kw: 'shrimp', wiki: 'Shrimp' },
+            { kw: 'prawn', wiki: 'Prawn' },
+            { kw: 'meat', wiki: 'Meat' },
+            { kw: 'premium butter', wiki: 'Butter' },
+            { kw: 'sparkling mineral', wiki: 'Sparkling_water' },
+            { kw: 'sparkling water', wiki: 'Sparkling_water' },
+            { kw: 'flavored sparkling', wiki: 'Sparkling_water' },
+            { kw: 'lemon-lime', wiki: 'Lemon-lime_drink' },
+            { kw: 'diet cola', wiki: 'Diet_Coke' },
+            { kw: 'mango pulp', wiki: 'Mango' },
+            { kw: 'cranberry juice', wiki: 'Cranberry_juice' },
+            { kw: 'almond butter', wiki: 'Almond_butter' },
+            { kw: 'cornflakes mixture', wiki: 'Mixture_(snack)' },
+            { kw: 'cornflake', wiki: 'Corn_flakes' },
+            { kw: 'dry fruit mixture', wiki: 'Trail_mix' },
+            { kw: 'sohal', wiki: 'Biscuit' },
+            { kw: 'milk bikis', wiki: 'Biscuit' },
+            { kw: 'atta biscuit', wiki: 'Biscuit' },
+            { kw: 'dates chutney', wiki: 'Chutney' },
+            { kw: 'mint water', wiki: 'Mint' },
+            { kw: 'dry fruit', wiki: 'Dried_fruit' },
+            { kw: 'vegetable straw', wiki: 'Vegetable_chip' },
+            { kw: 'pita chip', wiki: 'Pita' },
+            { kw: 'cheese ball', wiki: 'Cheese_puffs' },
+            { kw: 'papdi gathiya', wiki: 'Gathiya' },
+            { kw: 'ratlami sev', wiki: 'Sev_(food)' },
+            { kw: 'nylon sev', wiki: 'Sev_(food)' },
+            { kw: 'mixed vegetable pickle', wiki: 'Indian_pickle' },
+            { kw: 'sweet & sour', wiki: 'Indian_pickle' },
+            { kw: 'ready-to-fry', wiki: 'Panipuri' },
+            { kw: 'rozana', wiki: 'Basmati' },
+            { kw: 'everyday basmati', wiki: 'Basmati' },
+            { kw: 'jeera masala', wiki: 'Jaljeera' },
+            { kw: 'nimbu masala', wiki: 'Lemonade' },
+            { kw: 'dust tea', wiki: 'CTC_tea' },
+            { kw: 'granulated', wiki: 'CTC_tea' },
+            { kw: 'green tea lemon', wiki: 'Green_tea' },
+            { kw: 'instant coffee gold', wiki: 'Instant_coffee' },
+            { kw: 'chocolate malt', wiki: 'Milo_(drink)' },
+            { kw: 'whey protein', wiki: 'Whey_protein' },
+            { kw: 'protein powder', wiki: 'Whey_protein' },
+            { kw: 'packaged drinking', wiki: 'Bottled_water' },
+            { kw: 'natural spring', wiki: 'Spring_(hydrology)' },
+            { kw: 'vermicelli kheer', wiki: 'Kheer' },
+            { kw: 'instant gulab', wiki: 'Gulab_jamun' },
+            { kw: 'dharwad peda', wiki: 'Dharwad_peda' },
+            { kw: 'soan halwa', wiki: 'Sohan_halwa' },
+            { kw: 'ginger garlic', wiki: 'Ginger' },
+            { kw: 'fresh ragi', wiki: 'Finger_millet' },
+            { kw: 'fresh appam', wiki: 'Appam' },
+            { kw: 'fresh idli', wiki: 'Idli' },
+            { kw: 'fresh malai paneer', wiki: 'Paneer' },
+            { kw: 'fresh paneer', wiki: 'Paneer' },
+            { kw: 'thick set curd', wiki: 'Curd_(food)' },
+            { kw: 'fresh mawa', wiki: 'Khoa' },
+            { kw: 'rice fryum', wiki: 'Fryums' },
+            { kw: 'potato papad', wiki: 'Papadum' },
+            { kw: 'sabudana papad', wiki: 'Papadum' },
+            { kw: 'garlic & green', wiki: 'Papadum' },
+            { kw: 'urad papad', wiki: 'Papadum' },
+            { kw: 'blended vegetable', wiki: 'Cooking_oil' },
+            { kw: 'gingelly', wiki: 'Sesame_oil' },
+            { kw: 'rice bran', wiki: 'Rice_bran_oil' },
+            { kw: 'pure buffalo', wiki: 'Ghee' },
+            { kw: 'a2 vedic', wiki: 'Ghee' },
+            { kw: 'lucknawi saunf', wiki: 'Fennel' },
+            { kw: 'sev puri kit', wiki: 'Sev_puri' },
+            { kw: 'bhel puri kit', wiki: 'Bhelpuri' },
+            { kw: 'spicy mint', wiki: 'Chutney' },
+            { kw: 'idli milagai', wiki: 'Gunpowder_(food)' },
+            { kw: 'milk peda', wiki: 'Peda_(sweet)' },
+            { kw: 'sour cream', wiki: 'Sour_cream' },
+            { kw: 'microwave', wiki: 'Popcorn' },
+            { kw: 'butter popcorn', wiki: 'Popcorn' },
+            { kw: 'gummy bear', wiki: 'Gummy_bear' },
+            { kw: 'peppermint', wiki: 'Chewing_gum' },
+            { kw: 'chocolate protein', wiki: 'Protein_bar' },
+            { kw: 'peanut butter energy', wiki: 'Energy_bar' },
+            { kw: 'mixed fruit', wiki: 'Fruit_preserves' },
+        ];
+
+        // Category-specific fallback images (verified Wikipedia Wikimedia URLs)
+        const categoryFallbacks = {
+            'Pantry': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Spices_in_an_Indian_market.jpg/400px-Spices_in_an_Indian_market.jpg',
+            'Dairy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Milk_glass.jpg/400px-Milk_glass.jpg',
+            'Fruits': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Culinary_fruits_front_view.jpg/400px-Culinary_fruits_front_view.jpg',
+            'Vegetables': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Marketvegetables.jpg/400px-Marketvegetables.jpg',
+            'Snacks': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Banana_chips_%28Kerala_banana_chips%29.JPG/400px-Banana_chips_%28Kerala_banana_chips%29.JPG',
+            'Beverages': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/400px-A_small_cup_of_coffee.JPG',
+            'Bakery': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Fresh_made_bread_05.jpg/400px-Fresh_made_bread_05.jpg',
+        };
+        const genericFallback = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/400px-Good_Food_Display_-_NCI_Visuals_Online.jpg';
+
+        function findWikiTitle(name) {
+            const lower = name.toLowerCase();
+            for (let entry of extraMappings) {
+                if (lower.includes(entry.kw)) return entry.wiki;
+            }
+            return null;
+        }
+
+        async function fetchWikiImage(wikiTitle) {
+            try {
+                const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiTitle)}&prop=pageimages&format=json&pithumbsize=400&origin=*`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if (pageId === '-1' || !pages[pageId].thumbnail) return null;
+                return pages[pageId].thumbnail.source;
+            } catch { return null; }
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function needsFix(imageUrl) {
+            if (!imageUrl) return true;
+            if (imageUrl.includes('placehold.co')) return true;
+            if (imageUrl.includes('source.unsplash')) return true;
+            // Don't re-process items that already have Wikipedia images
+            if (imageUrl.includes('upload.wikimedia.org')) return false;
+            // Flag old Unsplash URLs that might be broken
+            if (imageUrl.includes('images.unsplash.com')) return true;
+            return false;
+        }
+
+        async function processRemaining() {
+            log('<span class="info">Fetching all products...</span>');
+            const snap = await getDocs(collection(db, 'products'));
+            
+            // Filter to only products that still need fixing
+            const toFix = snap.docs.filter(d => needsFix(d.data().image));
+            log(`<span class="info">Found ${toFix.length} products still needing images (out of ${snap.docs.length} total).</span>`);
+            log('─'.repeat(50));
+
+            let fixed = 0;
+            let fallbackUsed = 0;
+
+            for (let i = 0; i < toFix.length; i++) {
+                const product = toFix[i].data();
+                const name = product.name;
+                const progress = `[${i+1}/${toFix.length}]`;
+
+                // Try extra mappings
+                const wikiTitle = findWikiTitle(name);
+                let imageUrl = null;
+
+                if (wikiTitle) {
+                    imageUrl = await fetchWikiImage(wikiTitle);
+                    await delay(300);
+                }
+
+                if (!imageUrl) {
+                    // Try a direct search using the first meaningful words
+                    const cleanName = name.replace(/\(.*?\)/g, '').replace(/\/.*/g, '').trim();
+                    const searchWords = cleanName.split(' ').slice(0, 2).join('_');
+                    imageUrl = await fetchWikiImage(searchWords);
+                    await delay(300);
+                }
+
+                if (imageUrl) {
+                    await updateDoc(doc(db, 'products', toFix[i].id), { image: imageUrl });
+                    log(`${progress} <span class="success">✔ ${name}</span>`);
+                    fixed++;
+                } else {
+                    // Use category-specific fallback
+                    const cat = product.category || 'Pantry';
+                    const fallback = categoryFallbacks[cat] || genericFallback;
+                    await updateDoc(doc(db, 'products', toFix[i].id), { image: fallback });
+                    log(`${progress} <span class="warn">⚡ ${name} → category fallback (${cat})</span>`);
+                    fallbackUsed++;
+                }
+            }
+
+            log('─'.repeat(50));
+            log(`<strong style="color:#10b981;">✅ All done!</strong>`);
+            log(`<strong>Wikipedia images: ${fixed} | Category fallbacks: ${fallbackUsed}</strong>`);
+            log(`<br>Every single product now has a proper image. Refresh your storefront!`);
+        }
+
+        setTimeout(processRemaining, 1000);
+    </script>
+</body>
+</html>

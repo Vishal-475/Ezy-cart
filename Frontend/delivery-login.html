@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Portal Login | EzyCart</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="scripts/theme.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+    .login-container {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+    .login-container h2 {
+      margin-bottom: 24px;
+      color: var(--text-color);
+    }
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 16px;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn-login:hover {
+      background: var(--secondary-color);
+    }
+    .error-msg {
+      color: #ef4444;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">`n</head>
+<body>
+
+  <div class="login-container">
+    <img src="assets/logo/cart.png" alt="Logo" width="60" style="margin-bottom: 10px;">
+    <h2>Delivery Portal</h2>
+    <p style="color: var(--text-muted); margin-bottom: 24px;">Enter your Worker ID to view your assigned orders.</p>
+    
+    <div class="input-group">
+      <label for="workerId">Worker ID</label>
+      <input type="text" id="workerId" placeholder="e.g. jB3Lq..." required>
+    </div>
+    
+    <div id="errorMsg" class="error-msg">Invalid Worker ID. Please try again.</div>
+    
+    <button id="loginBtn" class="btn-login">Login</button>
+  </div>
+
+  <script type="module">
+    import { db, doc, getDoc } from './scripts/firebase-config.js';
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const workerId = document.getElementById('workerId').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
+
+      if (!workerId) return;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+      errorMsg.style.display = 'none';
+
+      try {
+        const workerRef = doc(db, 'workers', workerId);
+        const workerSnap = await getDoc(workerRef);
+
+        if (workerSnap.exists()) {
+          // Success
+          localStorage.setItem('deliveryWorkerId', workerId);
+          window.location.href = 'delivery-dashboard.html';
+        } else {
+          // Failed
+          errorMsg.style.display = 'block';
+          btn.disabled = false;
+          btn.innerHTML = 'Login';
+        }
+      } catch (err) {
+        errorMsg.textContent = "Connection error. Please try again.";
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = 'Login';
+      }
+    });
+  </script>
+</body>
+</html>

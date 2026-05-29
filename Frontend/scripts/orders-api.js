@@ -58,3 +58,13 @@ export async function updateOrderStatus(id, status) {
         return { success: false, error: error.message };
     }
 }
+
+export async function updateOrder(id, data) {
+    try {
+        const orderRef = doc(db, 'orders', id);
+        await updateDoc(orderRef, data);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}

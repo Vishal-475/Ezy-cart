@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Seeder</title>
+    <style>
+        body { font-family: system-ui; padding: 40px; background: #0f172a; color: #fff; text-align: center; }
+        .log { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; text-align: left; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+  <link rel="manifest" href="manifest.json">`n</head>
+<body>
+    <h1>Seeding EzyCart Database...</h1>
+    <p>Please wait while we automatically add premium products to your Firestore database.</p>
+    <div class="log" id="logBox">Starting seed process...<br></div>
+
+    <script type="module">
+        import { addProduct } from './scripts/products-api.js';
+
+        const seedData = [
+            // Vegetables
+            { name: 'Fresh Red Tomatoes', price: 45.00, category: 'Vegetables', unit: 'kg', stock: 50, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80' },
+            { name: 'Organic Carrots', price: 60.00, category: 'Vegetables', unit: 'kg', stock: 40, image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&q=80' },
+            { name: 'Fresh Broccoli Head', price: 85.00, category: 'Vegetables', unit: 'piece', stock: 25, image: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=500&q=80' },
+            { name: 'Green Bell Peppers', price: 55.00, category: 'Vegetables', unit: 'kg', stock: 30, image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=500&q=80' },
+            
+            // Fruits
+            { name: 'Premium Bananas', price: 60.00, category: 'Fruits', unit: 'dozen', stock: 100, image: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&q=80' },
+            { name: 'Fuji Apples', price: 180.00, category: 'Fruits', unit: 'kg', stock: 40, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6faa6?w=500&q=80' },
+            { name: 'Fresh Strawberries', price: 250.00, category: 'Fruits', unit: 'box', stock: 20, image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=500&q=80' },
+            { name: 'Sweet Watermelon', price: 90.00, category: 'Fruits', unit: 'piece', stock: 15, image: 'https://images.unsplash.com/photo-1587049352847-81a56d773c1c?w=500&q=80' },
+
+            // Dairy & Eggs
+            { name: 'Farm Fresh Eggs (6 Pack)', price: 45.00, category: 'Dairy & Eggs', unit: 'pack', stock: 50, image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=500&q=80' },
+            { name: 'Whole Cow Milk', price: 32.00, category: 'Dairy & Eggs', unit: '500ml', stock: 60, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80' },
+            { name: 'Premium Butter', price: 55.00, category: 'Dairy & Eggs', unit: '100g', stock: 30, image: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=500&q=80' },
+
+            // Meats & Seafood
+            { name: 'Fresh Chicken Breast', price: 280.00, category: 'Meats & Seafood', unit: 'kg', stock: 20, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&q=80' },
+            { name: 'Atlantic Salmon Fillet', price: 850.00, category: 'Meats & Seafood', unit: 'kg', stock: 10, image: 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=500&q=80' },
+
+            // Beverages
+            { name: '100% Orange Juice', price: 120.00, category: 'Beverages', unit: '1 Liter', stock: 35, image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&q=80' },
+            { name: 'Sparkling Mineral Water', price: 40.00, category: 'Beverages', unit: '750ml', stock: 100, image: 'https://images.unsplash.com/photo-1615592389070-bcc97e05ad01?w=500&q=80' },
+
+            // Snacks
+            { name: 'Salted Potato Chips', price: 20.00, category: 'Snacks', unit: 'pack', stock: 80, image: 'https://images.unsplash.com/photo-1566478989037-e124f508ea22?w=500&q=80' },
+            { name: 'Roasted Almonds', price: 350.00, category: 'Snacks', unit: '250g', stock: 40, image: 'https://images.unsplash.com/photo-1508061253366-f7da158b6d90?w=500&q=80' },
+
+            // Pantry Staples
+            { name: 'Whole Wheat Bread', price: 45.00, category: 'Pantry Staples', unit: 'loaf', stock: 25, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80' },
+            { name: 'Basmati Rice', price: 180.00, category: 'Pantry Staples', unit: 'kg', stock: 100, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80' },
+            { name: 'Extra Virgin Olive Oil', price: 450.00, category: 'Pantry Staples', unit: '500ml', stock: 30, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80' }
+        ];
+
+        const logBox = document.getElementById('logBox');
+
+        async function seed() {
+            for (let item of seedData) {
+                try {
+                    const res = await addProduct(item);
+                    if (res.success) {
+                        logBox.innerHTML += `<span class="success">✔ Added ${item.name} (${item.category})</span><br>`;
+                    } else {
+                        logBox.innerHTML += `<span class="error">✖ Failed ${item.name}: ${res.error}</span><br>`;
+                    }
+                } catch (err) {
+                    logBox.innerHTML += `<span class="error">✖ Error ${item.name}: ${err.message}</span><br>`;
+                }
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+            logBox.innerHTML += '<br><strong style="color:#10b981; font-size: 1.2rem;">All done! You can now close this tab and check your categories page.</strong>';
+        }
+
+        setTimeout(seed, 1000);
+    </script>
+</body>
+</html>

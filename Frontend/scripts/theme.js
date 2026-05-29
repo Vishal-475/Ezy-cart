@@ -27,6 +27,27 @@
             headerNav.insertBefore(themeToggle, headerNav.firstChild);
         }
 
+        // Create Mobile Menu Toggle if not present
+        let menuToggle = document.getElementById('mobile-menu-toggle');
+        if (!menuToggle) {
+            menuToggle = document.createElement('button');
+            menuToggle.id = 'mobile-menu-toggle';
+            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            menuToggle.className = 'mobile-menu-toggle';
+            
+            // Insert before the nav
+            headerNav.parentNode.insertBefore(menuToggle, headerNav);
+
+            menuToggle.addEventListener('click', () => {
+                headerNav.classList.toggle('nav-open');
+                if (headerNav.classList.contains('nav-open')) {
+                    menuToggle.innerHTML = '<i class="fas fa-times"></i>';
+                } else {
+                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+        }
+
         // Set initial icon
         themeToggle.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
 
@@ -46,3 +67,12 @@
         });
     });
 })();
+
+// Register Service Worker for PWA Support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => console.log('ServiceWorker registration successful'))
+            .catch(err => console.log('ServiceWorker registration failed: ', err));
+    });
+}

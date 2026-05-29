@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk Import Products</title>
+    <style>
+        body { font-family: system-ui; padding: 40px; background: #0f172a; color: #fff; text-align: center; }
+        .log { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; text-align: left; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5; }
+        .success { color: #10b981; }
+        .skip { color: #f59e0b; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>Bulk Importing 200+ Products...</h1>
+    <p>Please do not close this tab until the process is complete.</p>
+    <div class="log" id="logBox">Parsing list...<br></div>
+
+    <script type="module">
+        import { db, collection, getDocs, addDoc } from './scripts/firebase-config.js';
+
+        const rawText = `
+## 📦 Bakery & Bread (1 - 25)
+
+### Freshly Baked
+
+1. White Sandwich Bread
+2. Whole Wheat Bread
+3. Multi-grain Bread
+4. Sourdough Loaf
+5. French Baguette
+6. Brioche Buns
+7. Burger Buns
+8. Hot Dog Buns
+9. Butter Croissants
+10. Chocolate Croissants (Pain au Chocolat)
+11. Blueberry Muffins
+12. Chocolate Chip Muffins
+13. Cinnamon Rolls
+14. Plain Bagels
+15. Everything Bagels
+16. Garlic Naan
+17. Whole Wheat Roti
+18. Pita Bread Pocket Pack
+19. Tortilla Wraps (Flour)
+20. Tortilla Wraps (Corn)
+
+### Cakes & Cookies
+
+21. Chocolate Fudge Cake
+22. Vanilla Sponge Cake
+23. Red Velvet Pastry
+24. Chocolate Chip Cookies
+25. Oatmeal Raisin Cookies
+
+---
+
+## 🥛 Dairy, Eggs & Plant-Based Milks (26 - 55)
+
+### Milk & Cream
+
+26. Full Cream Milk (1L)
+27. Toned Milk (1L)
+28. Skimmed Milk
+29. Fresh Heavy Cream
+30. Cooking Cream
+
+### Butter & Cheese
+
+31. Salted Butter
+32. Unsalted Cooking Butter
+33. Cheddar Cheese Slices
+34. Mozzarella Cheese Shredded
+35. Parmesan Cheese Block
+36. Cream Cheese Spread
+37. Cottage Cheese (Paneer)
+38. Feta Cheese Crumbles
+39. Processed Cheese Cubes
+
+### Yogurt & Eggs
+
+40. Plain Greek Yogurt
+41. Low-Fat Yogurt
+42. Strawberry Yogurt Cup
+43. Mango Yogurt Cup
+44. Set Curd (Dahi)
+45. Fresh Farm Eggs (Pack of 6)
+46. Fresh Farm Eggs (Pack of 12)
+47. Organic Brown Eggs (Pack of 10)
+
+### Plant-Based Alternatives
+
+48. Almond Milk (Unsweetened)
+49. Soy Milk (Vanilla)
+50. Oat Milk (Barista Edition)
+51. Coconut Milk Pack
+52. Tofu Block (Firm)
+53. Tofu Block (Silken)
+54. Vegan Butter
+55. Almond Butter Cheese Spread
+
+---
+
+## 🍎 Fresh Produce: Fruits & Vegetables (56 - 90)
+
+### Fruits
+
+56. Red Apples (Pack of 4)
+57. Green Apples
+58. Cavendish Bananas (1 Dozen)
+59. Valencia Oranges
+60. Fresh Strawberries (Box)
+61. Blueberries (Box)
+62. Green Seedless Grapes
+63. Black Grapes
+64. Whole Watermelon
+65. Sweet Pineapple
+66. Ripe Mangoes (Alphonso)
+67. Ripe Papaya
+68. Pomegranate Pack
+69. Kiwi Fruit (Pack of 3)
+70. Lemon (Pack of 5)
+
+### Vegetables
+
+71. Yukon Gold Potatoes (1kg)
+72. Red Onions (1kg)
+73. Vine-Ripened Tomatoes (1kg)
+74. Cherry Tomatoes (Pack)
+75. Carrots (500g)
+76. Cucumbers
+77. Green Bell Peppers (Capsicum)
+78. Red & Yellow Bell Peppers Mix
+79. Broccoli Florets
+80. Cauliflower Whole
+81. Fresh Spinach Leaves (Bunch)
+82. Iceberg Lettuce
+83. Button Mushrooms (Button Pack)
+84. Garlic Pods (250g)
+85. Ginger Root (250g)
+86. Green Chilies Pack
+87. Sweet Corn Kernels Pack
+88. Zucchini (Green)
+89. Avocados (Pack of 2)
+90. Fresh Coriander/Cilantro Bunch
+
+---
+
+## 🌾 Staples: Grains, Rice & Pulses (91 - 120)
+
+### Rice & Flour
+
+91. Basmati Rice (Premium Long Grain)
+92. Jasmine Rice
+93. Brown Rice
+94. Sona Masuri Rice
+95. Whole Wheat Flour (Atta)
+96. All-Purpose Flour (Maida)
+97. Almond Flour
+98. Corn Flour
+99. Semolina (Suji)
+
+### Grains & Cereals
+
+100. Rolled Oats
+101. Instant Oats
+102. Corn Flakes
+103. Honey Almond Muesli
+104. Chocolate Granola
+105. Quinoa Seeds
+106. Pearl Millet (Bajra)
+107. Finger Millet (Ragi)
+
+### Pulses & Lentils
+
+108. Red Lentils (Masoor Dal)
+109. Yellow Split Peas (Toor Dal)
+110. Split Mung Beans (Moong Dal)
+111. Whole Black Lentils (Urad Sabut)
+112. Chickpeas (Garbanzo Beans)
+113. Black Eyed Peas
+114. Red Kidney Beans (Rajma)
+115. Green Peas (Dried)
+116. Soybeans
+117. Whole Wheat Pasta (Penne)
+118. Macaroni Pasta
+119. Spaghetti Pasta Noodles
+120. Instant Ramen Noodles (Masala/Spicy)
+
+---
+
+## 🧂 Oils, Sauces, Spices & Condiments (121 - 150)
+
+### Cooking Oils & Fats
+
+121. Extra Virgin Olive Oil
+122. Cold-Pressed Sunflower Oil
+123. Mustard Oil
+124. Coconut Cooking Oil
+125. Pure Cow Ghee
+
+### Sauces & Spices
+
+126. Tomato Ketchup
+127. Hot Chili Sauce
+128. Soy Sauce (Dark)
+129. Sriracha Hot Sauce
+130. Mayonnaise (Classic)
+131. Eggless Mayonnaise
+132. Dijon Mustard Sauce
+133. Pizza & Pasta Sauce Base
+134. Fine Sea Salt
+135. Pink Himalayan Salt
+136. Black Pepper Powder
+137. Red Chili Powder
+138. Turmeric Powder
+139. Cumin Powder
+140. Coriander Powder
+141. Garam Masala Powder
+142. Oregano Seasoning Mix
+143. Chili Flakes Shaker
+
+### Spreads & Sweeteners
+
+144. Creamy Peanut Butter
+145. Crunchy Peanut Butter
+146. Chocolate Hazelnut Spread
+147. Strawberry Fruit Jam
+148. Mixed Fruit Jam
+149. Pure Organic Honey
+150. Maple Syrup
+
+---
+
+## 🍿 Snacks, Sweets & Confectionery (151 - 180)
+
+### Packaged Snacks
+
+151. Classic Salted Potato Chips
+152. Barbecue Flavor Potato Chips
+153. Sour Cream & Onion Chips
+154. Tortilla Corn Chips (Nachos)
+155. Cheese Balls Puff Snack
+156. Salted Pretzels
+157. Butter Popcorn Kernels
+158. Microwave Butter Popcorn Pack
+159. Rice Crackers
+
+### Sweets & Chocolates
+
+160. Milk Chocolate Bar
+161. Dark Chocolate Bar (70% Cocoa)
+162. White Chocolate Bar
+163. Chocolate Caramel Bar
+164. Gummy Bears Candy Pack
+165. Peppermint Chewing Gum
+
+### Health Snacks & Nuts
+
+166. Roasted Salted Almonds
+167. Raw Cashew Nuts
+168. Walnuts (Shelled)
+169. Pistachios (Salted in Shell)
+170. Raisins (Kishmish)
+171. Dried Apricots
+172. Ripe Dates (Premium)
+173. Mixed Nuts and Berries Trail Mix
+174. Chia Seeds Pack
+175. Flax Seeds Pack
+176. Sunflower Roasted Seeds
+177. Chocolate Protein Bar
+178. Peanut Butter Energy Bar
+179. Baked Pita Chips
+180. Vegetable Straws Crackers
+
+---
+
+## ☕ Beverages (181 - 210)
+
+### Tea & Coffee
+
+181. Instant Coffee Powder
+182. Roasted Coffee Beans (Medium Roast)
+183. Ground Espresso Coffee
+184. English Breakfast Tea Bags (Pack of 25)
+185. Pure Green Tea Bags
+186. Earl Grey Black Tea
+187. Chamomile Herbal Tea
+188. Masala Chai Tea Blend
+
+### Juices & Soft Drinks
+
+189. 100% Orange Juice Tetrapack
+190. 100% Apple Juice Tetrapack
+191. Cranberry Juice Cocktail
+192. Mango Pulp Juice Drink
+193. Lemonade Drink
+194. Cola Carbonated Soda (Can)
+195. Diet Cola Carbonated Soda (Can)
+196. Lemon-Lime Clear Soda
+197. Ginger Ale
+198. Tonic Water
+199. Sparkling Water (Plain)
+200. Flavored Sparkling Water (Lime)
+
+### Health Drink Mixes & Water
+
+201. Chocolate Malt Health Drink Mix
+202. Whey Protein Powder (Vanilla - 1kg)
+203. Whey Protein Powder (Chocolate - 1kg)
+204. Coconut Water (Pack of 4)
+205. Packaged Drinking Water (1L)
+206. Natural Spring Water
+207. Aloe Vera Juice Drink
+208. Kombucha (Ginger Lemon Flavor)
+209. Kombucha (Mixed Berry Flavor)
+210. Iced Tea Liquid Mix (Lemon)
+        `;
+
+        const logBox = document.getElementById('logBox');
+        
+        function parseProducts() {
+            const lines = rawText.split('\n');
+            let currentCategory = 'Pantry';
+            const products = [];
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.startsWith('## ')) {
+                    const cat = line.toLowerCase();
+                    if (cat.includes('bakery')) currentCategory = 'Bakery';
+                    else if (cat.includes('dairy')) currentCategory = 'Dairy';
+                    else if (cat.includes('fruits')) currentCategory = 'Fruits'; 
+                    else if (cat.includes('staples')) currentCategory = 'Pantry';
+                    else if (cat.includes('oils')) currentCategory = 'Pantry';
+                    else if (cat.includes('snacks')) currentCategory = 'Snacks';
+                    else if (cat.includes('beverages')) currentCategory = 'Beverages';
+                } else if (line.match(/^\d+\.\s+(.+)$/)) {
+                    let name = line.match(/^\d+\.\s+(.+)$/)[1].trim();
+                    let cat = currentCategory;
+                    
+                    // Specific logic for veggies since they share the markdown section with Fruits
+                    const lowerName = name.toLowerCase();
+                    if (cat === 'Fruits' && (lowerName.includes('potato') || lowerName.includes('onion') || lowerName.includes('tomato') || lowerName.includes('carrot') || lowerName.includes('cucumber') || lowerName.includes('pepper') || lowerName.includes('capsicum') || lowerName.includes('broccoli') || lowerName.includes('cauliflower') || lowerName.includes('spinach') || lowerName.includes('lettuce') || lowerName.includes('mushroom') || lowerName.includes('garlic') || lowerName.includes('ginger') || lowerName.includes('chilies') || lowerName.includes('corn') || lowerName.includes('zucchini') || lowerName.includes('avocado') || lowerName.includes('coriander'))) {
+                        cat = 'Vegetables';
+                    }
+                    
+                    // Generate a nice placehold.co image URL 
+                    // Using a short 2-3 word abbreviation so the text fits nicely on the image
+                    const shortName = name.split(' ').slice(0, 2).join(' ');
+                    const imgUrl = `https://placehold.co/400x400/e2e8f0/0f172a?text=${encodeURIComponent(shortName)}`;
+                    
+                    products.push({
+                        name: name,
+                        category: cat,
+                        price: Math.floor(Math.random() * 400) + 25, // Random price between ₹25 and ₹425
+                        image: imgUrl,
+                        description: "Premium quality " + name + " directly from our trusted suppliers.",
+                        unit: '1 pack',
+                        stock: Math.floor(Math.random() * 50) + 10 // Random stock between 10 and 60
+                    });
+                }
+            });
+            return products;
+        }
+
+        async function processImport() {
+            try {
+                const newProducts = parseProducts();
+                logBox.innerHTML += `Parsed ${newProducts.length} items from your list.<br><br>`;
+                
+                // Fetch existing to avoid duplicates
+                logBox.innerHTML += `Fetching existing products from database...<br>`;
+                const snap = await getDocs(collection(db, 'products'));
+                const existingNames = new Set(snap.docs.map(doc => doc.data().name.toLowerCase()));
+                
+                logBox.innerHTML += `Found ${existingNames.size} existing products. Cross-referencing...<br><br>`;
+                
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                for (let prod of newProducts) {
+                    if (existingNames.has(prod.name.toLowerCase())) {
+                        logBox.innerHTML += `<span class="skip">⏭ Skipped: ${prod.name} (Already exists)</span><br>`;
+                        skippedCount++;
+                    } else {
+                        await addDoc(collection(db, 'products'), prod);
+                        logBox.innerHTML += `<span class="success">✔ Added: ${prod.name}</span><br>`;
+                        addedCount++;
+                    }
+                    // Small scroll to bottom trick
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+                
+                logBox.innerHTML += `<br><strong style="color:#10b981;">Complete! Added ${addedCount} new items. Skipped ${skippedCount} duplicates.</strong><br>`;
+                logBox.innerHTML += `<br><strong>You can safely close this tab now and view your updated storefront!</strong>`;
+            } catch (err) {
+                logBox.innerHTML += `<span class="error">✖ Fatal Error: ${err.message}</span><br>`;
+            }
+        }
+
+        // Start automatically
+        setTimeout(processImport, 1000);
+    </script>
+</body>
+</html>

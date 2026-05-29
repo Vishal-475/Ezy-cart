@@ -15,7 +15,7 @@
     .status-dropdown { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
     .btn-update { background: #3498db; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
   </style>
-</head>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
   <header>
     <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
@@ -48,6 +48,7 @@
             <th>Amount (₹)</th>
             <th>Date</th>
             <th>Status</th>
+            <th>Assign Worker</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -59,9 +60,9 @@
   </main>
 
   <script type="module">
-    import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+    import { auth, onAuthStateChanged, signOut, db, collection, getDocs } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
-    import { getAllOrders, updateOrderStatus } from './scripts/orders-api.js';
+    import { getAllOrders, updateOrderStatus, updateOrder } from './scripts/orders-api.js';
     import { showToast } from './scripts/toast.js';
 
     // Verify Admin Access
@@ -87,25 +88,44 @@
     };
 
     let ordersList = [];
+    let workersList = [];
+
+    async function loadWorkers() {
+      const snap = await getDocs(collection(db, 'workers'));
+      workersList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
 
     async function loadOrders() {
+      await loadWorkers();
       ordersList = await getAllOrders();
       const tbody = document.getElementById('orders-list');
       tbody.innerHTML = '';
 
       if (ordersList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No orders found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No orders found</td></tr>';
         return;
       }
+
+      let workerOptions = '<option value="">Unassigned</option>';
+      workersList.forEach(w => {
+        workerOptions += `<option value="${w.id}">${w.name} (${w.role})</option>`;
+      });
 
       ordersList.forEach(order => {
         const row = document.createElement('tr');
         const dateStr = new Date(order.createdAt).toLocaleString();
         
+        let orderWorkerOpts = workerOptions;
+        if (order.assignedWorker) {
+          orderWorkerOpts = orderWorkerOpts.replace(`value="${order.assignedWorker}"`, `value="${order.assignedWorker}" selected`);
+        }
+        
         row.innerHTML = `
           <td>${order.invoiceNumber}</td>
           <td>${order.customerName}</td>
-          <td>${order.customerPhone || 'N/A'}<br><small>${order.contactEmail || ''}</small></td>
+          <td>${order.customerPhone || 'N/A'}<br><small>${order.contactEmail || ''}</small>
+            ${order.customerPhone ? `<a href="https://wa.me/${order.customerPhone.replace(/\\D/g, '')}?text=Hi ${order.customerName}, regarding your order ${order.invoiceNumber} from EzyCart:" target="_blank" style="color: #25D366; margin-left: 8px;" title="WhatsApp Customer"><i class="fab fa-whatsapp"></i></a>` : ''}
+          </td>
           <td>${order.paymentMethod.toUpperCase()}</td>
           <td>${parseFloat(order.total).toFixed(2)}</td>
           <td>${dateStr}</td>
@@ -115,6 +135,11 @@
               <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
               <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
               <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+          <td>
+            <select class="status-dropdown" id="worker-${order.id}">
+              ${orderWorkerOpts}
             </select>
           </td>
           <td>
@@ -128,12 +153,14 @@
 
     window.updateStatus = async function(id) {
       const newStatus = document.getElementById(`status-${id}`).value;
-      const res = await updateOrderStatus(id, newStatus);
+      const workerId = document.getElementById(`worker-${id}`).value;
+      
+      const res = await updateOrder(id, { orderStatus: newStatus, assignedWorker: workerId || null });
       if (res.success) {
-        showToast("Order status updated successfully!", "success");
+        showToast("Order updated successfully!", "success");
         loadOrders();
       } else {
-        showToast("Failed to update status.", "error");
+        showToast("Failed to update order.", "error");
       }
     };
 

@@ -18,7 +18,7 @@
     .btn-edit { background: #f39c12; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
     .btn-delete { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
   </style>
-</head>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
   <header>
     <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
@@ -47,10 +47,13 @@
         <input type="number" id="p-price" placeholder="Price (₹)" step="0.01" required>
         <select id="p-category" required>
           <option value="">Select Category</option>
-          <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-          <option value="Dairy/Fresh Meats & Seafood">Dairy/Fresh Meats & Seafood</option>
+          <option value="Vegetables">Vegetables</option>
+          <option value="Fruits">Fruits</option>
+          <option value="Dairy & Eggs">Dairy & Eggs</option>
+          <option value="Meats & Seafood">Meats & Seafood</option>
           <option value="Snacks">Snacks</option>
           <option value="Beverages">Beverages</option>
+          <option value="Pantry Staples">Pantry Staples</option>
         </select>
         <input type="text" id="p-unit" placeholder="Unit (e.g. kg, liter, pack)" required>
         <input type="number" id="p-stock" placeholder="Stock Quantity" required>

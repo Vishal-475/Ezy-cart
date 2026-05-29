@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk Import Part 2</title>
+    <style>
+        body { font-family: system-ui; padding: 40px; background: #0f172a; color: #fff; text-align: center; }
+        .log { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; text-align: left; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5; }
+        .success { color: #10b981; }
+        .skip { color: #f59e0b; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>Importing Next Batch of Indian Groceries...</h1>
+    <p>Please do not close this tab until the process is complete.</p>
+    <div class="log" id="logBox">Parsing list...<br></div>
+
+    <script type="module">
+        import { db, collection, getDocs, addDoc } from './scripts/firebase-config.js';
+
+        const rawText = `
+Sharbati Whole Wheat Atta (5kg)
+Chakki Fresh Atta (10kg)
+Multi-grain Atta (5kg)
+Premium Maida / All-Purpose Flour (1kg)
+Sooji / Rava (Coarse Semolina, 1kg)
+Chiroti Rava (Fine Semolina, 1kg)
+Idli Rava (Rice Rava, 1kg)
+Besan / Gram Flour (1kg)
+Rice Flour / Arisi Maavu (1kg)
+
+Regional & Millet Flours
+Makki ka Atta / Yellow Corn Flour (1kg)
+Bajra Atta / Pearl Millet Flour (1kg)
+Jowar Atta / Sorghum Flour (1kg)
+Ragi Flour / Finger Millet Flour (1kg)
+Sattu Flour / Roasted Gram Flour (500g)
+Kuttu ka Atta / Buckwheat Flour (500g)
+Singhare ka Atta / Water Chestnut Flour (500g)
+Sabudana / Tapioca Pearls (500g)
+
+Rice Varieties
+Premium Biryani Basmati Rice (5kg)
+Rozana Everyday Basmati Rice (5kg)
+Sona Masuri Raw Rice (5kg)
+Sona Masuri Steam Rice (5kg)
+Ponni Boiled Rice (5kg)
+Idli Rice (5kg)
+Jeeraga Samba / Seeraga Samba Rice (1kg)
+Gobindobhog Rice (1kg)
+Kolam Rice (5kg)
+Poha / Thick Beaten Rice (500g)
+Poha / Thin Beaten Rice (500g)
+Murmura / Puffed Rice (250g)
+Vermicelli / Semiya (Roasted, 400g)
+
+🍲 Pulses, Dals & Whole Legumes (241 - 270)
+Split Dals
+Toor Dal / Arhar Dal (Pigeon Peas, 1kg)
+Moong Dal (Split Skinless Mung, 1kg)
+Moong Chilka (Split Mung with Skin, 1kg)
+Chana Dal (Split Bengal Gram, 1kg)
+Urad Dal White / Gota (Whole Skinless Black Gram, 1kg)
+Urad Dal Split (Split Black Gram with Skin, 1kg)
+Masoor Dal (Split Red Lentils, 1kg)
+
+Whole Grams & Beans
+Sabut Moong / Whole Green Gram (1kg)
+Kala Chana / Brown Chickpeas (1kg)
+Kabuli Chana / White Chickpeas (1kg)
+Rajma Chitra / Speckled Kidney Beans (1kg)
+Rajma Jammu / Deep Red Kidney Beans (1kg)
+Lobia / Black-Eyed Peas (500g)
+Whole Masoor / Whole Brown Lentils (1kg)
+Urad Sabut / Whole Black Gram (1kg)
+Horse Gram / Kollu / Kulthi (500g)
+Matar / Whole Dried White Peas (500g)
+
+Oils & Desi Ghee
+Pure Cow Ghee (Tins/Cartons, 1L)
+Pure Buffalo Ghee (500ml)
+A2 Vedic Bilona Cow Ghee (500ml)
+Mustard Oil / Sarso ka Tel (Kachi Ghani, 1L)
+Groundnut Oil / Peanut Oil (Cold Pressed, 1L)
+Coconut Oil / Nariyal Tel (Filter Cooking Grade, 1L)
+Gingelly Oil / Sesame Oil / Til ka Tel (1L)
+Rice Bran Oil (1L)
+Blended Vegetable Cooking Oil (1L)
+
+Kitchen Staples
+Jaggery Powder / Shakkar (1kg)
+Jaggery Block / Gur (1kg)
+Crystal Sugar / Cheeni (1kg)
+Mishri / Rock Sugar Candy (250g)
+
+🌶️ Indian Spices & Blends (271 - 315)
+Whole Spices
+Sabut Dhania / Coriander Seeds (200g)
+Sabut Jeera / Cumin Seeds (200g)
+Rai / Black Mustard Seeds (200g)
+Kadugu / Small Mustard Seeds (200g)
+Methi Dana / Fenugreek Seeds (100g)
+Saunf / Fennel Seeds (General, 100g)
+Lucknawi Saunf / Thin Refreshment Fennel (100g)
+Kalonji / Black Onion Seeds (50g)
+Ajwain / Carom Seeds (100g)
+Sabut Kali Mirch / Whole Black Pepper (100g)
+Laung / Whole Cloves (50g)
+Chhoti Elaichi / Green Cardamom (50g)
+Badi Elaichi / Black Cardamom (50g)
+Dalchini / Cinnamon Sticks (50g)
+Javitri / Mace (25g)
+Jaiphal / Nutmeg (Pack of 5)
+Star Anise / Chakri Phool (50g)
+Sabut Lal Mirch / Whole Dried Red Chilies (100g)
+Kashmiri Mirch Whole (100g)
+Kasuri Methi / Dried Fenugreek Leaves (50g)
+Hing / Premium Asafoetida Powder (50g)
+Pure Saffron Strands / Kesar (1g)
+Tamarind Slab / Imli (Without Seeds, 500g)
+
+Powdered Spices
+Haldi / Turmeric Powder (500g)
+Jeera Powder / Roasted Cumin Powder (100g)
+Dhania Powder / Coriander Powder (500g)
+Teekha Lal / Red Chili Powder (500g)
+Kashmiri Mirch Powder (Subtle Heat, 200g)
+Amchur / Dry Mango Powder (100g)
+Chaat Masala Powder (100g)
+Black Salt Powder / Kala Namak (200g)
+
+Authentic Spice Blends (Masalas)
+Garam Masala Premium (100g)
+Kitchen King Masala (100g)
+Shahi Paneer Masala (50g)
+Chole Masala (100g)
+Rajma Masala (100g)
+Chicken Masala (100g)
+Mutton Masala (100g)
+Fish Curry Masala (100g)
+Sambar Powder (200g)
+Rasam Powder (100g)
+Idli Milagai Podi / Gunpowder (150g)
+Pav Bhaji Masala (100g)
+Biryani Masala Powder (50g)
+Tea Masala / Chai Spices (50g)
+
+🥢 Pickles, Chutneys & Papads (316 - 345)
+Traditional Pickles (Achar)
+Spicy Mango Pickle / Aam ka Achar (500g)
+Punjabi Mango Pickle (With Mustard Oil, 500g)
+Lime Pickle / Nimbu ka Achar (Sour & Spicy, 500g)
+Sweet & Sour Lime Pickle (500g)
+Green Chili Pickle / Hari Mirch Achar (400g)
+Garlic Pickle / Lahsun Achar (400g)
+Mixed Vegetable Pickle (500g)
+Avakaya Mango Pickle (Andhra Style, 500g)
+Gongura Pickle / Sorrel Leaves Chutney (300g)
+Ker Sangri Pickle (Rajasthani Style, 400g)
+Sweet Mango Chutney / Chunda (350g)
+
+Accompaniments & Papads
+Lijjat Moong Papad (Pack of 1, 200g)
+Urad Papad (Black Pepper Infused, 200g)
+Garlic & Green Chili Papad (200g)
+Rice Fryums / Elai Vadam (200g)
+Potato Papad / Aloo Papad (200g)
+Sabudana Papad / Tapioca Wafers (200g)
+
+Pastes & Cooking Bases
+Ginger Paste / Adrak Paste (200g)
+Garlic Paste / Lahsun Paste (200g)
+Ginger Garlic Paste Twin Pack (200g)
+Tamarind Paste / Concentrate (200g)
+Tomato Puree Tetrapack (200ml)
+
+Traditional Breakfast Batters
+Fresh Idli & Dosa Batter (1kg)
+Fresh Appam Batter (1kg)
+Fresh Ragi Idli Batter (1kg)
+
+Indian Dairy Essentials
+Fresh Paneer Block / Cottage Cheese (200g)
+Fresh Malai Paneer Cubes (Frozen, 500g)
+Thick Set Curd / Dahi Cup (400g)
+Fresh Mawa / Khoya (For Sweets, 200g)
+Amul Salted Butter Block (500g)
+
+नमकीन Traditional Snacks & Namkeen (346 - 385)
+Savory Namkeen
+Aloo Bhujia (400g)
+Bikaneri Bhujia (400g)
+Haldiram's Style Moong Dal (Salted, 400g)
+Khatta Meetha Mixture (400g)
+Cornflakes Mixture (350g)
+Spicy Murukku / Chakli Crunchy Rings (250g)
+Madras Mixture (Deep Fried Sev & Nuts, 250g)
+Kara Boondi (Spicy Gram Flour Pearls, 250g)
+Gathiya / Bhavnagari Gathiya (250g)
+Papdi Gathiya with Paprika (250g)
+Ratlami Sev (Spicy Clove-Infused, 250g)
+Nylon Sev (Fine for Chaat Toppings, 200g)
+Banana Chips (Kerala Style Yellow, 200g)
+Banana Chips (Spicy Peri-Peri/Chili, 200g)
+Roasted Chana / Salted Gram (250g)
+Masala Peanuts / Sing Bhujia (250g)
+Dry Fruit Mixture Premium (200g)
+Mathri / Punjabi Methi Mathri (250g)
+Sohal / Crispy Flaky Flour Crackers (250g)
+Mini Samosa Crunchy Snack (200g)
+Mini Kachori Dry Snack (200g)
+Bhakarwadi (Sweet & Spicy Crispy Roll, 250g)
+
+Indian Biscuits & Tea-Time Snacks
+Parle-G Gluco Biscuits (Economy Pack)
+Marie Gold Biscuits (Twin Pack)
+Good Day Cashew Cookies (200g)
+Bourbon Chocolate Cream Biscuits (150g)
+Hide & Seek Chocolate Chip Biscuits (120g)
+Krackjack Sweet & Salty Crackers (200g)
+Monaco Salty Biscuits (200g)
+Milk Bikis Biscuits (150g)
+Britannia Rusk / Premium Cake Rusk (300g)
+Suji Rusk / Toast (400g)
+Atta Biscuits (Bakery Style, 300g)
+Nankhatai Traditional Shortbread (250g)
+
+Instant Chaat Kits
+Pani Puri Kit (Includes Pellets & Water Paste, 300g)
+Bhel Puri Kit (With Chutneys & Papdi, 250g)
+Sev Puri Kit (250g)
+Ready-to-Fry Pani Puri Pellets (500g)
+Dry Sweet Dates Chutney for Chaat (200g)
+Spicy Mint Water Paste for Pani Puri (200g)
+
+🧋 Indian Sweets & Beverages (386 - 420)
+Packaged Sweets (Mithai)
+Gulab Jamun (Tin, 1kg)
+Rasgulla (Tin, 1kg)
+Soan Papdi (Flaky Sweet, 400g)
+Kaju Katli (Premium Box, 250g)
+Besan Laddoo (Box, 250g)
+Motichoor Laddoo (Box, 250g)
+Petha / Agra Dry Petha (350g)
+Milk Peda / Doodh Peda (250g)
+Dharwad Peda (200g)
+Mysore Pak (Ghee Rich, 250g)
+Dry Fruit Halwa Mix (250g)
+Soan Halwa Crunchy (250g)
+
+Instant Dessert Mixes
+Instant Gulab Jamun Mix (200g)
+Vermicelli Kheer / Payasam Mix (150g)
+Gajar Halwa Instant Mix (200g)
+Jalebi Instant Mix with Pouring Bottle (200g)
+
+Teas & Coffees (Chai & Filter Coffee)
+Premium Assam Loose Leaf Tea (1kg)
+Granulated Dust Tea for Strong Chai (1kg)
+Green Tea Lemon & Honey (25 Bags)
+South Indian Filter Coffee Powder (80:20 Chicory Blend, 500g)
+South Indian Filter Coffee Powder (Pure Coffee, 500g)
+Instant Coffee Gold Blend (100g)
+
+Traditional Syrups & Cold Beverages
+Rooh Afza / Rose Syrup Concentrate (750ml)
+Khus Syrup / Vetiver Concentrate (750ml)
+Badam Drink Mix Powder / Almond Milk Powder (200g)
+Thandai Syrup Concentrate (500ml)
+Jeera Masala Carbonated Soda (Can, 300ml)
+Nimbu Masala Soda (Can, 300ml)
+Ready-to-Drink Mango Frooti / Slice (1.2L)
+Sweet Lassi (Tetrapack, 200ml)
+Mango Lassi (Tetrapack, 200ml)
+Amul Taaza Spiced Buttermilk / Chaas (200ml)
+Jaljeera Instant Drink Powder Mix (100g)
+Aam Panna / Green Mango Drink Mix (200g)
+Tender Coconut Water Natural Pack (200ml)
+        `;
+
+        const logBox = document.getElementById('logBox');
+        
+        function parseProducts() {
+            const lines = rawText.split('\n');
+            
+            // Map subcategories to our primary categories
+            let currentCategory = 'Pantry'; // Default for flours, rice, dals, oils, spices
+            
+            const skipLines = [
+                'Regional & Millet Flours', 'Rice Varieties', 'Split Dals', 'Whole Grams & Beans',
+                'Oils & Desi Ghee', 'Kitchen Staples', 'Whole Spices', 'Powdered Spices',
+                'Authentic Spice Blends (Masalas)', 'Traditional Pickles (Achar)',
+                'Accompaniments & Papads', 'Pastes & Cooking Bases', 'Traditional Breakfast Batters',
+                'Indian Dairy Essentials', 'Savory Namkeen', 'Indian Biscuits & Tea-Time Snacks',
+                'Instant Chaat Kits', 'Packaged Sweets (Mithai)', 'Instant Dessert Mixes',
+                'Teas & Coffees (Chai & Filter Coffee)', 'Traditional Syrups & Cold Beverages'
+            ];
+
+            const products = [];
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                
+                // Check if it's a major header or sub-header
+                if (
+                    line.includes('(241 - 270)') ||
+                    line.includes('(271 - 315)') ||
+                    line.includes('(316 - 345)') ||
+                    line.includes('(346 - 385)') ||
+                    line.includes('(386 - 420)') ||
+                    skipLines.includes(line)
+                ) {
+                    if (line.includes('Pulses, Dals')) currentCategory = 'Pantry';
+                    else if (line.includes('Indian Spices')) currentCategory = 'Pantry';
+                    else if (line.includes('Pickles, Chutneys')) currentCategory = 'Pantry';
+                    else if (line.includes('Traditional Snacks')) currentCategory = 'Snacks';
+                    else if (line.includes('Indian Sweets & Beverages')) currentCategory = 'Beverages';
+                    return; // Skip adding this line as a product
+                }
+                
+                // Must be a product!
+                let name = line;
+                
+                // Exception for dairy items that ended up here
+                let cat = currentCategory;
+                if (name.toLowerCase().includes('paneer') || name.toLowerCase().includes('butter') || name.toLowerCase().includes('curd') || name.toLowerCase().includes('mawa')) {
+                    cat = 'Dairy';
+                }
+                if (name.toLowerCase().includes('sweets') || name.toLowerCase().includes('halwa') || name.toLowerCase().includes('jalebi') || name.toLowerCase().includes('laddoo') || name.toLowerCase().includes('jamun') || name.toLowerCase().includes('peda') || name.toLowerCase().includes('papdi') || name.toLowerCase().includes('katli')) {
+                    cat = 'Snacks'; // Using Snacks for sweets
+                }
+                if (name.toLowerCase().includes('coffee') || name.toLowerCase().includes('tea ') || name.toLowerCase().includes('drink') || name.toLowerCase().includes('syrup') || name.toLowerCase().includes('soda')) {
+                    cat = 'Beverages';
+                }
+
+                // Clean up the name for the image
+                const shortName = name.split('/')[0].split('(')[0].trim().split(' ').slice(0, 2).join(' ');
+                const imgUrl = `https://placehold.co/400x400/e2e8f0/0f172a?text=${encodeURIComponent(shortName)}`;
+                
+                products.push({
+                    name: name,
+                    category: cat,
+                    price: Math.floor(Math.random() * 400) + 40,
+                    image: imgUrl,
+                    description: "Authentic premium quality " + name.split('(')[0].trim(),
+                    unit: '1 pack',
+                    stock: Math.floor(Math.random() * 50) + 10
+                });
+            });
+            return products;
+        }
+
+        async function processImport() {
+            try {
+                const newProducts = parseProducts();
+                logBox.innerHTML += `Parsed ${newProducts.length} authentic Indian grocery items.<br><br>`;
+                
+                logBox.innerHTML += `Fetching existing products from database...<br>`;
+                const snap = await getDocs(collection(db, 'products'));
+                const existingNames = new Set(snap.docs.map(doc => doc.data().name.toLowerCase()));
+                
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                for (let prod of newProducts) {
+                    if (existingNames.has(prod.name.toLowerCase())) {
+                        logBox.innerHTML += `<span class="skip">⏭ Skipped: ${prod.name} (Already exists)</span><br>`;
+                        skippedCount++;
+                    } else {
+                        await addDoc(collection(db, 'products'), prod);
+                        logBox.innerHTML += `<span class="success">✔ Added: ${prod.name}</span><br>`;
+                        addedCount++;
+                    }
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+                
+                logBox.innerHTML += `<br><strong style="color:#10b981;">Complete! Added ${addedCount} new items. Skipped ${skippedCount} duplicates.</strong><br>`;
+            } catch (err) {
+                logBox.innerHTML += `<span class="error">✖ Fatal Error: ${err.message}</span><br>`;
+            }
+        }
+
+        setTimeout(processImport, 1000);
+    </script>
+</body>
+</html>

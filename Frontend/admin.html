@@ -30,7 +30,7 @@
     .action-btn { margin-top: 20px; padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer; }
     .action-btn:hover { background: var(--secondary-color); }
   </style>
-</head>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
   <!-- Header -->
   <header>
@@ -42,6 +42,7 @@
           <li><a href="products.html" style="color:white; text-decoration:none;">Products</a></li>
           <li><a href="orders.html" style="color:white; text-decoration:none;">Orders</a></li>
           <li><a href="customers.html" style="color:white; text-decoration:none;">Customers</a></li>
+          <li><a href="promocodes.html" style="color:white; text-decoration:none;">Promo Codes</a></li>
           <li><a href="workers.html" style="color:white; text-decoration:none;">Workers</a></li>
           <li><a href="attendance.html" style="color:white; text-decoration:none;">Attendance</a></li>
           <li><button onclick="logoutAdmin()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Logout</button></li>
@@ -153,6 +154,12 @@
       const chartData = dates.map(d => salesByDate[d]);
       const ctx = document.getElementById('salesTrendChart').getContext('2d');
       if (salesChart) salesChart.destroy();
+      
+      // Create gradient fill
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.3)');
+      gradient.addColorStop(1, isDark ? 'rgba(16, 185, 129, 0.0)' : 'rgba(16, 185, 129, 0.0)');
+
       salesChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -160,28 +167,48 @@
           datasets: [{
             label: 'Sales (₹)',
             data: chartData,
-            borderColor: '#42b83e',
-            backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(66, 184, 62, 0.1)',
-            borderWidth: 2,
+            borderColor: '#10b981',
+            backgroundColor: gradient,
+            borderWidth: 3,
             fill: true,
-            tension: 0.3
+            tension: 0.4,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: isDark ? '#1e293b' : '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? '#334155' : '#ffffff',
+              titleColor: isDark ? '#f8fafc' : '#0f172a',
+              bodyColor: isDark ? '#cbd5e1' : '#475569',
+              borderColor: isDark ? '#475569' : '#e2e8f0',
+              borderWidth: 1,
+              padding: 10,
+              displayColors: false,
+              callbacks: {
+                label: function(context) { return '₹ ' + context.parsed.y.toFixed(2); }
+              }
+            }
+          },
           scales: {
             y: { 
               beginAtZero: true, 
-              grid: { color: gridColor },
-              ticks: { color: textColor }
+              grid: { color: gridColor, drawBorder: false },
+              ticks: { color: textColor, padding: 10 }
             },
             x: {
-              grid: { color: gridColor },
-              ticks: { color: textColor }
+              grid: { display: false },
+              ticks: { color: textColor, padding: 10 }
             }
-          }
+          },
+          interaction: { intersect: false, mode: 'index' }
         }
       });
     }
@@ -208,9 +235,10 @@
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: ['#2ecc71', '#3498db', '#f1c40f', '#e67e22', '#9b59b6', '#34495e'],
-            borderWidth: isDark ? 2 : 1,
-            borderColor: isDark ? '#1e293b' : '#ffffff'
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'],
+            borderWidth: isDark ? 2 : 2,
+            borderColor: isDark ? '#0f172a' : '#ffffff',
+            hoverOffset: 4
           }]
         },
         options: {
@@ -260,7 +288,9 @@
           labels: ['Present', 'Absent', 'Leave'],
           datasets: [{
             data: [presentCount, absentCount, leaveCount],
-            backgroundColor: ['#2ecc71', '#e74c3c', '#f1c40f']
+            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+            borderRadius: 6,
+            barThickness: 40
           }]
         },
         options: {

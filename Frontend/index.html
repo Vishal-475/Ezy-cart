@@ -54,15 +54,17 @@
             }
         }
     </style>
-</head>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
     <header>
         <h1>EzyCart <span style="font-weight:400; color: var(--color-slate-400); font-size: 0.8em;">THE DAILY BASKET</span></h1>
         <nav>
             <a href="index.html" class="active">Home</a>
             <a href="categories.html">Categories</a>
+            <a href="wishlist.html" id="wishlist-link"><i class="fas fa-heart"></i> <span id="wishlist-count" class="cart-badge" style="background: var(--danger); display: none;">0</span></a>
             <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
+            <a href="my-orders.html" id="orders-link" style="display:none;">My Orders</a>
             <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
@@ -133,10 +135,12 @@
 
     <script type="module">
         import { updateCartBadge } from './scripts/cart-manager.js';
+        import { updateWishlistBadge } from './scripts/wishlist-manager.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
         import { getUserRole } from './scripts/auth.js';
 
         updateCartBadge();
+        updateWishlistBadge();
 
         // Handle Auth Link — NEVER show Admin Panel to regular users
         const authLink = document.getElementById('auth-link');
@@ -147,6 +151,9 @@
                     authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
                     authLink.href = 'admin.html';
                 } else {
+                    const ordersLink = document.getElementById('orders-link');
+                    if (ordersLink) ordersLink.style.display = 'inline';
+                    
                     authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
                     authLink.href = '#';
                     authLink.onclick = async (e) => {

@@ -3,27 +3,488 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVMG SuperMarket - Product</title>
+    <title>EzyCart — Product Details | THE DAILY BASKET</title>
+    <meta name="description" content="Product details at EzyCart THE DAILY BASKET.">
     <link rel="stylesheet" href="styles/style.css">
-</head>
+    <link rel="icon" href="assets/logo/cart.png">
+    <script src="scripts/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .product-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .product-image-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-image-box img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            object-fit: contain;
+            transition: transform var(--transition-base);
+        }
+
+        .product-image-box:hover img {
+            transform: scale(1.05);
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-category-tag {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            align-self: flex-start;
+        }
+
+        .product-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .product-price-box {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .product-unit {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .product-description {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 24px 0;
+        }
+
+        .add-to-cart-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-full);
+            padding: 4px 8px;
+        }
+
+        .quantity-selector button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-fast);
+        }
+
+        .quantity-selector button:hover {
+            background: var(--bg-secondary);
+        }
+
+        .quantity-selector span {
+            width: 40px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-add-large {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1.1rem;
+            border-radius: var(--radius-full);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: color var(--transition-fast);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .product-container {
+                grid-template-columns: 1fr;
+            }
+            .add-to-cart-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quantity-selector {
+                justify-content: center;
+                padding: 10px;
+            }
+        }
+    </style>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
     <header>
-        <h1>Product Details</h1>
+        <h1>EzyCart</h1>
         <nav>
             <a href="index.html">Home</a>
-            <a href="cart.html">Cart</a>
+            <a href="categories.html">Categories</a>
+            <a href="wishlist.html" id="wishlist-link"><i class="fas fa-heart"></i> <span id="wishlist-count" class="cart-badge" style="background: var(--danger); display: none;">0</span></a>
+            <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html">Checkout</a>
+            <a href="my-orders.html" id="orders-link" style="display:none;">My Orders</a>
+            <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
+
     <main>
-        <section class="product-details">
-            <img src="https://via.placeholder.com/150" alt="Product Image">
-            <h2>Product Name</h2>
-            <p>Description of the product goes here.</p>
-            <p>Price: $3.99</p>
-            <button onclick="addToCart('Product Name', 3.99)">Add to Cart</button>
-        </section>
+        <a href="categories.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Products</a>
+
+        <div id="loader" class="loader"><i class="fas fa-spinner fa-spin"></i> Loading product details...</div>
+        <div id="error-msg" style="display: none; text-align: center; padding: 40px; color: var(--danger);"></div>
+
+        <div class="product-container" id="product-content" style="display: none;">
+            <div class="product-image-box">
+                <img id="p-img" src="" alt="Product Image">
+            </div>
+            
+            <div class="product-info">
+                <span class="product-category-tag" id="p-category">Category</span>
+                <h2 class="product-title" id="p-name">Product Name</h2>
+                
+                <div class="product-price-box">
+                    <span class="product-price">₹<span id="p-price">0.00</span></span>
+                    <span class="product-unit">/ <span id="p-unit">item</span></span>
+                </div>
+
+                <div class="product-description" id="p-desc">
+                    Premium quality fresh product sourced locally. Perfect for your daily needs.
+                </div>
+
+                <div class="add-to-cart-section">
+                    <div class="quantity-selector">
+                        <button id="btn-minus"><i class="fas fa-minus" style="font-size: 0.8rem;"></i></button>
+                        <span id="qty-val">1</span>
+                        <button id="btn-plus"><i class="fas fa-plus" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                    <button class="btn-lg btn-add-large" id="btn-add-cart">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+
+                <!-- Trust Badges -->
+                <div style="display: flex; gap: 20px; margin-top: 20px; color: var(--text-muted); font-size: 0.85rem;">
+                    <div style="display: flex; align-items: center; gap: 6px;"><i class="fas fa-leaf" style="color: var(--accent);"></i> Freshly Sourced</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><i class="fas fa-truck" style="color: var(--accent);"></i> Fast Delivery</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><i class="fas fa-shield-alt" style="color: var(--accent);"></i> Quality Guaranteed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="reviews-section" style="margin-top: 60px; display: none; max-width: 800px;" id="reviews-container">
+            <h3 style="font-size: 1.8rem; margin-bottom: 20px;">Customer Reviews</h3>
+            
+            <div id="review-list" style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px;">
+                <!-- Dynamic Reviews -->
+            </div>
+
+            <div id="review-form-container" style="background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); border: 1px solid var(--border-glass); display: none;">
+                <h4 style="font-size: 1.2rem; margin-bottom: 15px;">Write a Review</h4>
+                <div class="star-rating-input" id="star-rating-input" style="font-size: 1.5rem; color: #fbbf24; cursor: pointer; margin-bottom: 15px;">
+                    <i class="far fa-star" data-rating="1"></i>
+                    <i class="far fa-star" data-rating="2"></i>
+                    <i class="far fa-star" data-rating="3"></i>
+                    <i class="far fa-star" data-rating="4"></i>
+                    <i class="far fa-star" data-rating="5"></i>
+                </div>
+                <textarea id="review-text" rows="4" placeholder="Share your experience with this product..." style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-primary); margin-bottom: 15px; font-family: inherit; resize: vertical;"></textarea>
+                <button class="btn-lg" id="submit-review-btn" style="width: auto; padding: 10px 24px;">Submit Review</button>
+            </div>
+            
+            <div id="login-to-review-msg" style="padding: 20px; background: var(--accent-light); border-radius: var(--radius-sm); color: var(--text-secondary); text-align: center;">
+                Please <a href="login.html" style="color: var(--accent); font-weight: bold; text-decoration: underline;">log in</a> to write a review.
+            </div>
+        </div>
     </main>
-    <script src="scripts/script.js"></script>
+
+    <footer>
+        <p>&copy; 2024 EzyCart THE DAILY BASKET. All rights reserved.</p>
+    </footer>
+
+    <script type="module">
+        import { getProductById } from './scripts/products-api.js';
+        import { addToCart, updateCartBadge } from './scripts/cart-manager.js';
+        import { toggleWishlist, isInWishlist, updateWishlistBadge } from './scripts/wishlist-manager.js';
+        import { auth, onAuthStateChanged, signOut, db, collection, addDoc, getDocs, query, where, orderBy } from './scripts/firebase-config.js';
+        import { getUserRole, getUserProfile } from './scripts/auth.js';
+        import { showToast } from './scripts/toast.js';
+
+        updateCartBadge();
+        updateWishlistBadge();
+
+        let currentProduct = null;
+        let selectedQty = 1;
+        let currentRating = 0;
+        let loggedInUser = null;
+
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                showError("Product not found.");
+                return;
+            }
+
+            currentProduct = await getProductById(productId);
+            
+            if (!currentProduct) {
+                showError("Product not found or is unavailable.");
+                return;
+            }
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('product-content').style.display = 'grid';
+
+            document.getElementById('p-img').src = currentProduct.image || 'assets/img/default.png';
+            document.getElementById('p-img').alt = currentProduct.name;
+            document.getElementById('p-category').textContent = currentProduct.category || 'General';
+            document.getElementById('p-name').textContent = currentProduct.name;
+            document.getElementById('p-price').textContent = currentProduct.price.toFixed(2);
+            document.getElementById('p-unit').textContent = currentProduct.unit || 'item';
+            
+            if (currentProduct.description) {
+                document.getElementById('p-desc').textContent = currentProduct.description;
+            }
+
+            document.title = `${currentProduct.name} - EzyCart`;
+            await loadReviews(productId);
+        }
+
+        function showError(msg) {
+            document.getElementById('loader').style.display = 'none';
+            const errEl = document.getElementById('error-msg');
+            errEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+            errEl.style.display = 'block';
+        }
+
+        // Quantity Handlers
+        document.getElementById('btn-minus').onclick = () => {
+            if (selectedQty > 1) {
+                selectedQty--;
+                document.getElementById('qty-val').textContent = selectedQty;
+            }
+        };
+
+        document.getElementById('btn-plus').onclick = () => {
+            if (selectedQty < 99) {
+                selectedQty++;
+                document.getElementById('qty-val').textContent = selectedQty;
+            }
+        };
+
+        // Add to Cart Handler
+        document.getElementById('btn-add-cart').onclick = () => {
+            if (!currentProduct) return;
+            
+            // Loop addToCart 'selectedQty' times to add the right amount
+            // Since cart-manager.js addToCart adds 1, we can either loop it or modify it.
+            // Looping is safer to not break other pages.
+            for (let i = 0; i < selectedQty; i++) {
+                addToCart(currentProduct.name, currentProduct.price);
+            }
+            
+            showToast(`${selectedQty}x ${currentProduct.name} added to cart!`, 'success');
+            
+            // Visual feedback
+            const btn = document.getElementById('btn-add-cart');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+            btn.style.background = 'var(--accent-hover)';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.style.background = '';
+                // Reset qty
+                selectedQty = 1;
+                document.getElementById('qty-val').textContent = selectedQty;
+            }, 1500);
+        };
+
+        // Load Reviews
+        async function loadReviews(productId) {
+            const reviewList = document.getElementById('review-list');
+            try {
+                const q = query(collection(db, 'reviews'), where('productId', '==', productId), orderBy('createdAt', 'desc'));
+                const snap = await getDocs(q);
+                
+                reviewList.innerHTML = '';
+                if(snap.empty) {
+                    reviewList.innerHTML = '<p style="color: var(--text-muted);">No reviews yet. Be the first to review!</p>';
+                } else {
+                    snap.forEach(doc => {
+                        const rev = doc.data();
+                        const starsHtml = '<i class="fas fa-star" style="color: #fbbf24;"></i>'.repeat(rev.rating) + '<i class="far fa-star" style="color: #fbbf24;"></i>'.repeat(5 - rev.rating);
+                        
+                        reviewList.innerHTML += `
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <strong style="color: var(--text-primary);">${rev.userName}</strong>
+                                    <span>${starsHtml}</span>
+                                </div>
+                                <p style="color: var(--text-secondary); line-height: 1.5;">${rev.text}</p>
+                                <small style="color: var(--text-muted); display: block; margin-top: 10px;">${new Date(rev.createdAt).toLocaleDateString()}</small>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('reviews-container').style.display = 'block';
+            } catch(e) {
+                console.error('Error loading reviews:', e);
+            }
+        }
+
+        // Star rating UI logic
+        document.querySelectorAll('.star-rating-input i').forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentRating = parseInt(e.target.dataset.rating);
+                document.querySelectorAll('.star-rating-input i').forEach((s, index) => {
+                    if (index < currentRating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+
+        // Submit Review
+        document.getElementById('submit-review-btn').addEventListener('click', async () => {
+            if(!loggedInUser) return;
+            const text = document.getElementById('review-text').value.trim();
+            if(currentRating === 0) {
+                showToast('Please select a star rating', 'warning');
+                return;
+            }
+            if(!text) {
+                showToast('Please write a review', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('submit-review-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const profile = await getUserProfile(loggedInUser.uid);
+                await addDoc(collection(db, 'reviews'), {
+                    productId: currentProduct.id,
+                    userId: loggedInUser.uid,
+                    userName: (profile && profile.displayName) ? profile.displayName : 'EzyCart Customer',
+                    rating: currentRating,
+                    text: text,
+                    createdAt: new Date().toISOString()
+                });
+                
+                showToast('Review submitted successfully!', 'success');
+                document.getElementById('review-text').value = '';
+                currentRating = 0;
+                document.querySelectorAll('.star-rating-input i').forEach(s => {
+                    s.classList.remove('fas'); s.classList.add('far');
+                });
+                
+                await loadReviews(currentProduct.id);
+            } catch(e) {
+                console.error(e);
+                showToast('Error submitting review', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Review';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Auth handling
+        const authLink = document.getElementById('auth-link');
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                loggedInUser = user;
+                document.getElementById('login-to-review-msg').style.display = 'none';
+                document.getElementById('review-form-container').style.display = 'block';
+                
+                const role = await getUserRole(user.uid);
+                if (role === 'admin') {
+                    authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
+                    authLink.href = 'admin.html';
+                } else {
+                    const ordersLink = document.getElementById('orders-link');
+                    if (ordersLink) ordersLink.style.display = 'inline';
+                    
+                    authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                    authLink.href = '#';
+                    authLink.onclick = async (e) => {
+                        e.preventDefault();
+                        await signOut(auth);
+                        window.location.reload();
+                    };
+                }
+            } else {
+                authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                authLink.href = 'login.html';
+                authLink.onclick = null;
+            }
+        });
+    </script>
 </body>
 </html>

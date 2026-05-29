@@ -16,6 +16,19 @@ export async function getAllProducts(categoryFilter = null) {
     }
 }
 
+export async function getProductById(id) {
+    try {
+        const docRef = doc(db, 'products', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() };
+        }
+    } catch (error) {
+        console.error("Error fetching product: ", error);
+    }
+    return null;
+}
+
 export async function addProduct(productData) {
     try {
         const docRef = await addDoc(productsCollection, { ...productData, isActive: true });

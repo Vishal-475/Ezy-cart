@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Image Fetch (Wikipedia)</title>
+    <style>
+        body { font-family: system-ui; padding: 30px; background: #0f172a; color: #fff; text-align: center; }
+        .log { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; text-align: left; max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.6; }
+        .success { color: #10b981; }
+        .warn { color: #f59e0b; }
+        .error { color: #ef4444; }
+        .info { color: #60a5fa; }
+        .preview { display: inline-block; width: 40px; height: 40px; border-radius: 6px; vertical-align: middle; margin-right: 8px; object-fit: cover; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Smart Image Fetch via Wikipedia</h1>
+    <p>Fetching real, verified food photos from Wikipedia for every product.</p>
+    <div class="log" id="logBox">Initializing...<br></div>
+
+    <script type="module">
+        import { db, collection, getDocs, doc, updateDoc } from './scripts/firebase-config.js';
+
+        const logBox = document.getElementById('logBox');
+        function log(msg, cls = '') {
+            logBox.innerHTML += cls ? `<span class="${cls}">${msg}</span><br>` : `${msg}<br>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 1: Map product keywords → Wikipedia article titles
+        // This is the CORE of the accuracy. Each entry maps a keyword
+        // found in the product name to the correct Wikipedia article.
+        // Order matters — more specific keywords should come first.
+        // ═══════════════════════════════════════════════════════════
+        const keywordToWiki = [
+            // ── BAKERY ──
+            { kw: 'sourdough', wiki: 'Sourdough' },
+            { kw: 'baguette', wiki: 'Baguette' },
+            { kw: 'brioche', wiki: 'Brioche' },
+            { kw: 'burger bun', wiki: 'Hamburger_bun' },
+            { kw: 'hot dog bun', wiki: 'Hot_dog_bun' },
+            { kw: 'croissant', wiki: 'Croissant' },
+            { kw: 'pain au chocolat', wiki: 'Pain_au_chocolat' },
+            { kw: 'muffin', wiki: 'Muffin' },
+            { kw: 'cinnamon roll', wiki: 'Cinnamon_roll' },
+            { kw: 'bagel', wiki: 'Bagel' },
+            { kw: 'naan', wiki: 'Naan' },
+            { kw: 'roti', wiki: 'Chapati' },
+            { kw: 'pita', wiki: 'Pita' },
+            { kw: 'tortilla', wiki: 'Tortilla' },
+            { kw: 'red velvet', wiki: 'Red_velvet_cake' },
+            { kw: 'chocolate fudge cake', wiki: 'Chocolate_cake' },
+            { kw: 'vanilla sponge', wiki: 'Sponge_cake' },
+            { kw: 'sandwich bread', wiki: 'White_bread' },
+            { kw: 'whole wheat bread', wiki: 'Whole_wheat_bread' },
+            { kw: 'multi-grain bread', wiki: 'Multigrain_bread' },
+            { kw: 'chocolate chip cookie', wiki: 'Chocolate_chip_cookie' },
+            { kw: 'oatmeal raisin', wiki: 'Oatmeal_raisin_cookie' },
+
+            // ── DAIRY ──
+            { kw: 'cream milk', wiki: 'Whole_milk' },
+            { kw: 'toned milk', wiki: 'Toned_milk' },
+            { kw: 'skimmed milk', wiki: 'Skimmed_milk' },
+            { kw: 'heavy cream', wiki: 'Cream' },
+            { kw: 'cooking cream', wiki: 'Cream' },
+            { kw: 'salted butter', wiki: 'Butter' },
+            { kw: 'unsalted', wiki: 'Butter' },
+            { kw: 'cheddar', wiki: 'Cheddar_cheese' },
+            { kw: 'mozzarella', wiki: 'Mozzarella' },
+            { kw: 'parmesan', wiki: 'Parmigiano-Reggiano' },
+            { kw: 'cream cheese', wiki: 'Cream_cheese' },
+            { kw: 'paneer', wiki: 'Paneer' },
+            { kw: 'feta', wiki: 'Feta' },
+            { kw: 'processed cheese', wiki: 'Processed_cheese' },
+            { kw: 'greek yogurt', wiki: 'Strained_yogurt' },
+            { kw: 'strawberry yogurt', wiki: 'Yogurt' },
+            { kw: 'mango yogurt', wiki: 'Yogurt' },
+            { kw: 'yogurt', wiki: 'Yogurt' },
+            { kw: 'set curd', wiki: 'Curd_(food)' },
+            { kw: 'dahi', wiki: 'Curd_(food)' },
+            { kw: 'brown egg', wiki: 'Egg_as_food' },
+            { kw: 'farm egg', wiki: 'Egg_as_food' },
+            { kw: 'almond milk', wiki: 'Almond_milk' },
+            { kw: 'soy milk', wiki: 'Soy_milk' },
+            { kw: 'oat milk', wiki: 'Oat_milk' },
+            { kw: 'coconut milk', wiki: 'Coconut_milk' },
+            { kw: 'tofu', wiki: 'Tofu' },
+            { kw: 'vegan butter', wiki: 'Margarine' },
+            { kw: 'mawa', wiki: 'Khoa' },
+            { kw: 'khoya', wiki: 'Khoa' },
+            { kw: 'amul', wiki: 'Butter' },
+
+            // ── FRUITS ──
+            { kw: 'red apple', wiki: 'Apple' },
+            { kw: 'green apple', wiki: 'Granny_Smith' },
+            { kw: 'banana', wiki: 'Banana' },
+            { kw: 'orange', wiki: 'Orange_(fruit)' },
+            { kw: 'strawberr', wiki: 'Strawberry' },
+            { kw: 'blueberr', wiki: 'Blueberry' },
+            { kw: 'green seedless grape', wiki: 'Sultana_(grape)' },
+            { kw: 'black grape', wiki: 'Grape' },
+            { kw: 'watermelon', wiki: 'Watermelon' },
+            { kw: 'pineapple', wiki: 'Pineapple' },
+            { kw: 'mango', wiki: 'Mango' },
+            { kw: 'papaya', wiki: 'Papaya' },
+            { kw: 'pomegranate', wiki: 'Pomegranate' },
+            { kw: 'kiwi', wiki: 'Kiwifruit' },
+            { kw: 'lemon', wiki: 'Lemon' },
+
+            // ── VEGETABLES ──
+            { kw: 'potato', wiki: 'Potato' },
+            { kw: 'red onion', wiki: 'Red_onion' },
+            { kw: 'cherry tomato', wiki: 'Cherry_tomato' },
+            { kw: 'tomato', wiki: 'Tomato' },
+            { kw: 'carrot', wiki: 'Carrot' },
+            { kw: 'cucumber', wiki: 'Cucumber' },
+            { kw: 'green bell pepper', wiki: 'Bell_pepper' },
+            { kw: 'bell pepper', wiki: 'Bell_pepper' },
+            { kw: 'broccoli', wiki: 'Broccoli' },
+            { kw: 'cauliflower', wiki: 'Cauliflower' },
+            { kw: 'spinach', wiki: 'Spinach' },
+            { kw: 'lettuce', wiki: 'Lettuce' },
+            { kw: 'mushroom', wiki: 'Agaricus_bisporus' },
+            { kw: 'garlic', wiki: 'Garlic' },
+            { kw: 'ginger root', wiki: 'Ginger' },
+            { kw: 'green chili', wiki: 'Chili_pepper' },
+            { kw: 'sweet corn', wiki: 'Sweet_corn' },
+            { kw: 'zucchini', wiki: 'Zucchini' },
+            { kw: 'avocado', wiki: 'Avocado' },
+            { kw: 'coriander', wiki: 'Coriander' },
+            { kw: 'cilantro', wiki: 'Coriander' },
+
+            // ── RICE ──
+            { kw: 'biryani', wiki: 'Biryani' },
+            { kw: 'basmati', wiki: 'Basmati' },
+            { kw: 'jasmine rice', wiki: 'Jasmine_rice' },
+            { kw: 'brown rice', wiki: 'Brown_rice' },
+            { kw: 'sona masuri', wiki: 'Sona_masuri' },
+            { kw: 'ponni', wiki: 'Ponni_rice' },
+            { kw: 'idli rice', wiki: 'Idli' },
+            { kw: 'jeeraga samba', wiki: 'Seeraga_samba' },
+            { kw: 'gobindobhog', wiki: 'Gobindobhog' },
+            { kw: 'kolam rice', wiki: 'Rice' },
+            { kw: 'poha', wiki: 'Flattened_rice' },
+            { kw: 'beaten rice', wiki: 'Flattened_rice' },
+            { kw: 'murmura', wiki: 'Puffed_rice' },
+            { kw: 'puffed rice', wiki: 'Puffed_rice' },
+            { kw: 'vermicelli', wiki: 'Vermicelli' },
+            { kw: 'semiya', wiki: 'Vermicelli' },
+            { kw: 'rice', wiki: 'Rice' },
+
+            // ── FLOUR ──
+            { kw: 'sharbati', wiki: 'Atta_flour' },
+            { kw: 'chakki', wiki: 'Atta_flour' },
+            { kw: 'whole wheat atta', wiki: 'Atta_flour' },
+            { kw: 'multi-grain atta', wiki: 'Atta_flour' },
+            { kw: 'maida', wiki: 'Maida_flour' },
+            { kw: 'all-purpose flour', wiki: 'All-purpose_flour' },
+            { kw: 'sooji', wiki: 'Semolina' },
+            { kw: 'rava', wiki: 'Semolina' },
+            { kw: 'semolina', wiki: 'Semolina' },
+            { kw: 'chiroti rava', wiki: 'Semolina' },
+            { kw: 'idli rava', wiki: 'Idli' },
+            { kw: 'besan', wiki: 'Gram_flour' },
+            { kw: 'gram flour', wiki: 'Gram_flour' },
+            { kw: 'rice flour', wiki: 'Rice_flour' },
+            { kw: 'corn flour', wiki: 'Corn_starch' },
+            { kw: 'almond flour', wiki: 'Almond_meal' },
+            { kw: 'makki', wiki: 'Cornmeal' },
+            { kw: 'bajra', wiki: 'Pearl_millet' },
+            { kw: 'jowar', wiki: 'Sorghum' },
+            { kw: 'ragi', wiki: 'Finger_millet' },
+            { kw: 'sattu', wiki: 'Sattu' },
+            { kw: 'kuttu', wiki: 'Buckwheat' },
+            { kw: 'buckwheat', wiki: 'Buckwheat' },
+            { kw: 'singhare', wiki: 'Water_caltrop' },
+            { kw: 'sabudana', wiki: 'Tapioca' },
+            { kw: 'tapioca', wiki: 'Tapioca' },
+            { kw: 'atta', wiki: 'Atta_flour' },
+            { kw: 'flour', wiki: 'Flour' },
+
+            // ── DALS & PULSES ──
+            { kw: 'toor dal', wiki: 'Pigeon_pea' },
+            { kw: 'arhar', wiki: 'Pigeon_pea' },
+            { kw: 'moong chilka', wiki: 'Mung_bean' },
+            { kw: 'moong dal', wiki: 'Mung_bean' },
+            { kw: 'sabut moong', wiki: 'Mung_bean' },
+            { kw: 'chana dal', wiki: 'Chickpea' },
+            { kw: 'kala chana', wiki: 'Chickpea' },
+            { kw: 'kabuli chana', wiki: 'Chickpea' },
+            { kw: 'chickpea', wiki: 'Chickpea' },
+            { kw: 'urad dal', wiki: 'Vigna_mungo' },
+            { kw: 'urad sabut', wiki: 'Vigna_mungo' },
+            { kw: 'masoor dal', wiki: 'Lentil' },
+            { kw: 'red lentil', wiki: 'Lentil' },
+            { kw: 'whole masoor', wiki: 'Lentil' },
+            { kw: 'lentil', wiki: 'Lentil' },
+            { kw: 'rajma chitra', wiki: 'Kidney_bean' },
+            { kw: 'rajma jammu', wiki: 'Rajma' },
+            { kw: 'rajma', wiki: 'Rajma' },
+            { kw: 'kidney bean', wiki: 'Kidney_bean' },
+            { kw: 'lobia', wiki: 'Black-eyed_pea' },
+            { kw: 'black-eyed', wiki: 'Black-eyed_pea' },
+            { kw: 'horse gram', wiki: 'Macrotyloma_uniflorum' },
+            { kw: 'matar', wiki: 'Pea' },
+            { kw: 'green pea', wiki: 'Pea' },
+            { kw: 'soybean', wiki: 'Soybean' },
+            { kw: 'dal', wiki: 'Dal' },
+
+            // ── GHEE & OILS ──
+            { kw: 'cow ghee', wiki: 'Ghee' },
+            { kw: 'buffalo ghee', wiki: 'Ghee' },
+            { kw: 'bilona', wiki: 'Ghee' },
+            { kw: 'ghee', wiki: 'Ghee' },
+            { kw: 'mustard oil', wiki: 'Mustard_oil' },
+            { kw: 'sarso', wiki: 'Mustard_oil' },
+            { kw: 'olive oil', wiki: 'Olive_oil' },
+            { kw: 'sunflower oil', wiki: 'Sunflower_oil' },
+            { kw: 'groundnut oil', wiki: 'Peanut_oil' },
+            { kw: 'peanut oil', wiki: 'Peanut_oil' },
+            { kw: 'coconut oil', wiki: 'Coconut_oil' },
+            { kw: 'sesame oil', wiki: 'Sesame_oil' },
+            { kw: 'gingelly', wiki: 'Sesame_oil' },
+            { kw: 'rice bran oil', wiki: 'Rice_bran_oil' },
+            { kw: 'cooking oil', wiki: 'Cooking_oil' },
+            { kw: 'oil', wiki: 'Cooking_oil' },
+
+            // ── SUGAR & SWEETENERS ──
+            { kw: 'jaggery', wiki: 'Jaggery' },
+            { kw: 'gur', wiki: 'Jaggery' },
+            { kw: 'shakkar', wiki: 'Jaggery' },
+            { kw: 'mishri', wiki: 'Rock_candy' },
+            { kw: 'rock sugar', wiki: 'Rock_candy' },
+            { kw: 'sugar', wiki: 'Sugar' },
+            { kw: 'honey', wiki: 'Honey' },
+            { kw: 'maple syrup', wiki: 'Maple_syrup' },
+
+            // ── WHOLE SPICES ──
+            { kw: 'cumin seed', wiki: 'Cumin' },
+            { kw: 'jeera', wiki: 'Cumin' },
+            { kw: 'coriander seed', wiki: 'Coriander' },
+            { kw: 'dhania', wiki: 'Coriander' },
+            { kw: 'mustard seed', wiki: 'Mustard_seed' },
+            { kw: 'rai ', wiki: 'Mustard_seed' },
+            { kw: 'kadugu', wiki: 'Mustard_seed' },
+            { kw: 'fenugreek', wiki: 'Fenugreek' },
+            { kw: 'methi dana', wiki: 'Fenugreek' },
+            { kw: 'kasuri methi', wiki: 'Fenugreek' },
+            { kw: 'fennel', wiki: 'Fennel' },
+            { kw: 'saunf', wiki: 'Fennel' },
+            { kw: 'kalonji', wiki: 'Nigella_sativa' },
+            { kw: 'ajwain', wiki: 'Ajwain' },
+            { kw: 'carom', wiki: 'Ajwain' },
+            { kw: 'black pepper', wiki: 'Black_pepper' },
+            { kw: 'kali mirch', wiki: 'Black_pepper' },
+            { kw: 'clove', wiki: 'Clove' },
+            { kw: 'laung', wiki: 'Clove' },
+            { kw: 'green cardamom', wiki: 'Cardamom' },
+            { kw: 'chhoti elaichi', wiki: 'Cardamom' },
+            { kw: 'black cardamom', wiki: 'Black_cardamom' },
+            { kw: 'badi elaichi', wiki: 'Black_cardamom' },
+            { kw: 'cardamom', wiki: 'Cardamom' },
+            { kw: 'cinnamon', wiki: 'Cinnamon' },
+            { kw: 'dalchini', wiki: 'Cinnamon' },
+            { kw: 'mace', wiki: 'Mace_(spice)' },
+            { kw: 'javitri', wiki: 'Mace_(spice)' },
+            { kw: 'nutmeg', wiki: 'Nutmeg' },
+            { kw: 'jaiphal', wiki: 'Nutmeg' },
+            { kw: 'star anise', wiki: 'Star_anise' },
+            { kw: 'chakri phool', wiki: 'Star_anise' },
+            { kw: 'dried red chili', wiki: 'Chili_pepper' },
+            { kw: 'lal mirch', wiki: 'Chili_pepper' },
+            { kw: 'kashmiri mirch', wiki: 'Kashmiri_chilli' },
+            { kw: 'asafoetida', wiki: 'Asafoetida' },
+            { kw: 'hing', wiki: 'Asafoetida' },
+            { kw: 'saffron', wiki: 'Saffron' },
+            { kw: 'kesar', wiki: 'Saffron' },
+            { kw: 'tamarind', wiki: 'Tamarind' },
+            { kw: 'imli', wiki: 'Tamarind' },
+
+            // ── SPICE POWDERS ──
+            { kw: 'turmeric', wiki: 'Turmeric' },
+            { kw: 'haldi', wiki: 'Turmeric' },
+            { kw: 'chili powder', wiki: 'Chili_powder' },
+            { kw: 'amchur', wiki: 'Amchoor' },
+            { kw: 'chaat masala', wiki: 'Chaat_masala' },
+            { kw: 'black salt', wiki: 'Kala_namak' },
+            { kw: 'kala namak', wiki: 'Kala_namak' },
+            { kw: 'himalayan salt', wiki: 'Himalayan_salt' },
+            { kw: 'sea salt', wiki: 'Sea_salt' },
+            { kw: 'oregano', wiki: 'Oregano' },
+
+            // ── MASALA BLENDS ──
+            { kw: 'garam masala', wiki: 'Garam_masala' },
+            { kw: 'kitchen king', wiki: 'Kitchen_king_masala' },
+            { kw: 'shahi paneer masala', wiki: 'Shahi_paneer' },
+            { kw: 'chole masala', wiki: 'Chana_masala' },
+            { kw: 'rajma masala', wiki: 'Rajma' },
+            { kw: 'chicken masala', wiki: 'Chicken_tikka_masala' },
+            { kw: 'mutton masala', wiki: 'Rogan_josh' },
+            { kw: 'fish curry', wiki: 'Fish_curry' },
+            { kw: 'sambar powder', wiki: 'Sambar_(dish)' },
+            { kw: 'rasam', wiki: 'Rasam' },
+            { kw: 'podi', wiki: 'Gunpowder_(food)' },
+            { kw: 'pav bhaji', wiki: 'Pav_bhaji' },
+            { kw: 'biryani masala', wiki: 'Biryani' },
+            { kw: 'tea masala', wiki: 'Masala_chai' },
+            { kw: 'chai spice', wiki: 'Masala_chai' },
+            { kw: 'masala', wiki: 'Masala' },
+
+            // ── PICKLES & CHUTNEYS ──
+            { kw: 'mango pickle', wiki: 'Indian_pickle' },
+            { kw: 'aam ka achar', wiki: 'Indian_pickle' },
+            { kw: 'lime pickle', wiki: 'Indian_pickle' },
+            { kw: 'nimbu', wiki: 'Indian_pickle' },
+            { kw: 'green chili pickle', wiki: 'Indian_pickle' },
+            { kw: 'garlic pickle', wiki: 'Indian_pickle' },
+            { kw: 'avakaya', wiki: 'Avakaya' },
+            { kw: 'gongura', wiki: 'Gongura' },
+            { kw: 'ker sangri', wiki: 'Ker_sangri' },
+            { kw: 'mango chutney', wiki: 'Chutney' },
+            { kw: 'chunda', wiki: 'Chunda' },
+            { kw: 'pickle', wiki: 'Indian_pickle' },
+            { kw: 'chutney', wiki: 'Chutney' },
+
+            // ── PAPADS ──
+            { kw: 'lijjat', wiki: 'Papadum' },
+            { kw: 'papad', wiki: 'Papadum' },
+            { kw: 'fryum', wiki: 'Fryums' },
+            { kw: 'vadam', wiki: 'Fryums' },
+
+            // ── PASTES ──
+            { kw: 'ginger garlic paste', wiki: 'Ginger' },
+            { kw: 'ginger paste', wiki: 'Ginger' },
+            { kw: 'garlic paste', wiki: 'Garlic' },
+            { kw: 'tamarind paste', wiki: 'Tamarind' },
+            { kw: 'tomato puree', wiki: 'Tomato_paste' },
+
+            // ── BATTERS ──
+            { kw: 'idli', wiki: 'Idli' },
+            { kw: 'dosa', wiki: 'Dosa' },
+            { kw: 'appam', wiki: 'Appam' },
+
+            // ── NAMKEEN & INDIAN SNACKS ──
+            { kw: 'bhujia', wiki: 'Bikaneri_bhujia' },
+            { kw: 'mixture', wiki: 'Mixture_(snack)' },
+            { kw: 'murukku', wiki: 'Murukku' },
+            { kw: 'chakli', wiki: 'Chakli' },
+            { kw: 'boondi', wiki: 'Boondi' },
+            { kw: 'gathiya', wiki: 'Gathiya' },
+            { kw: 'sev', wiki: 'Sev_(food)' },
+            { kw: 'banana chips', wiki: 'Banana_chip' },
+            { kw: 'roasted chana', wiki: 'Chickpea' },
+            { kw: 'masala peanut', wiki: 'Peanut' },
+            { kw: 'mathri', wiki: 'Mathri' },
+            { kw: 'samosa', wiki: 'Samosa' },
+            { kw: 'kachori', wiki: 'Kachori' },
+            { kw: 'bhakarwadi', wiki: 'Bakarwadi' },
+
+            // ── BISCUITS ──
+            { kw: 'parle-g', wiki: 'Parle-G' },
+            { kw: 'marie gold', wiki: 'Marie_biscuit' },
+            { kw: 'bourbon', wiki: 'Bourbon_biscuit' },
+            { kw: 'good day', wiki: 'Good_Day_(biscuit)' },
+            { kw: 'hide & seek', wiki: 'Parle_Products' },
+            { kw: 'monaco', wiki: 'Parle_Products' },
+            { kw: 'krackjack', wiki: 'Parle_Products' },
+            { kw: 'britannia rusk', wiki: 'Rusk' },
+            { kw: 'rusk', wiki: 'Rusk' },
+            { kw: 'nankhatai', wiki: 'Nankhatai' },
+            { kw: 'biscuit', wiki: 'Biscuit' },
+
+            // ── CHAAT KITS ──
+            { kw: 'pani puri', wiki: 'Panipuri' },
+            { kw: 'bhel puri', wiki: 'Bhelpuri' },
+            { kw: 'sev puri', wiki: 'Sev_puri' },
+            { kw: 'chaat', wiki: 'Chaat' },
+
+            // ── INDIAN SWEETS ──
+            { kw: 'gulab jamun', wiki: 'Gulab_jamun' },
+            { kw: 'rasgulla', wiki: 'Rasgulla' },
+            { kw: 'soan papdi', wiki: 'Soan_papdi' },
+            { kw: 'kaju katli', wiki: 'Kaju_katli' },
+            { kw: 'besan laddoo', wiki: 'Laddu' },
+            { kw: 'motichoor', wiki: 'Laddu' },
+            { kw: 'laddoo', wiki: 'Laddu' },
+            { kw: 'petha', wiki: 'Petha' },
+            { kw: 'peda', wiki: 'Peda_(sweet)' },
+            { kw: 'mysore pak', wiki: 'Mysore_pak' },
+            { kw: 'halwa', wiki: 'Halva' },
+            { kw: 'soan halwa', wiki: 'Sohan_halwa' },
+            { kw: 'kheer', wiki: 'Kheer' },
+            { kw: 'payasam', wiki: 'Payasam' },
+            { kw: 'jalebi', wiki: 'Jalebi' },
+            { kw: 'gajar halwa', wiki: 'Gajar_ka_halwa' },
+
+            // ── TEA & COFFEE ──
+            { kw: 'assam', wiki: 'Assam_tea' },
+            { kw: 'green tea', wiki: 'Green_tea' },
+            { kw: 'earl grey', wiki: 'Earl_Grey_tea' },
+            { kw: 'chamomile', wiki: 'Chamomile_tea' },
+            { kw: 'english breakfast', wiki: 'English_breakfast_tea' },
+            { kw: 'masala chai', wiki: 'Masala_chai' },
+            { kw: 'chai', wiki: 'Masala_chai' },
+            { kw: 'filter coffee', wiki: 'Indian_filter_coffee' },
+            { kw: 'espresso', wiki: 'Espresso' },
+            { kw: 'coffee bean', wiki: 'Coffee_bean' },
+            { kw: 'instant coffee', wiki: 'Instant_coffee' },
+            { kw: 'coffee', wiki: 'Coffee' },
+            { kw: 'tea bag', wiki: 'Tea_bag' },
+            { kw: 'tea', wiki: 'Tea' },
+
+            // ── INDIAN BEVERAGES ──
+            { kw: 'rooh afza', wiki: 'Rooh_Afza' },
+            { kw: 'khus syrup', wiki: 'Chrysopogon_zizanioides' },
+            { kw: 'thandai', wiki: 'Thandai' },
+            { kw: 'lassi', wiki: 'Lassi' },
+            { kw: 'buttermilk', wiki: 'Buttermilk' },
+            { kw: 'chaas', wiki: 'Chaas' },
+            { kw: 'jaljeera', wiki: 'Jaljeera' },
+            { kw: 'aam panna', wiki: 'Aam_panna' },
+            { kw: 'coconut water', wiki: 'Coconut_water' },
+            { kw: 'frooti', wiki: 'Frooti' },
+            { kw: 'badam', wiki: 'Almond' },
+            { kw: 'kombucha', wiki: 'Kombucha' },
+            { kw: 'aloe vera', wiki: 'Aloe_vera' },
+            { kw: 'iced tea', wiki: 'Iced_tea' },
+
+            // ── JUICES & DRINKS ──
+            { kw: 'orange juice', wiki: 'Orange_juice' },
+            { kw: 'apple juice', wiki: 'Apple_juice' },
+            { kw: 'cranberry', wiki: 'Cranberry_juice' },
+            { kw: 'lemonade', wiki: 'Lemonade' },
+            { kw: 'cola', wiki: 'Cola' },
+            { kw: 'ginger ale', wiki: 'Ginger_ale' },
+            { kw: 'tonic water', wiki: 'Tonic_water' },
+            { kw: 'sparkling water', wiki: 'Sparkling_water' },
+            { kw: 'mineral water', wiki: 'Mineral_water' },
+            { kw: 'spring water', wiki: 'Spring_water' },
+            { kw: 'drinking water', wiki: 'Drinking_water' },
+            { kw: 'soda', wiki: 'Soft_drink' },
+            { kw: 'juice', wiki: 'Juice' },
+            { kw: 'whey protein', wiki: 'Whey_protein' },
+            { kw: 'health drink', wiki: 'Malt_drink' },
+            { kw: 'malt', wiki: 'Malt_drink' },
+
+            // ── CONDIMENTS ──
+            { kw: 'ketchup', wiki: 'Ketchup' },
+            { kw: 'sriracha', wiki: 'Sriracha' },
+            { kw: 'hot chili sauce', wiki: 'Hot_sauce' },
+            { kw: 'soy sauce', wiki: 'Soy_sauce' },
+            { kw: 'mayonnaise', wiki: 'Mayonnaise' },
+            { kw: 'dijon', wiki: 'Dijon_mustard' },
+            { kw: 'pizza', wiki: 'Pizza_sauce' },
+            { kw: 'peanut butter', wiki: 'Peanut_butter' },
+            { kw: 'hazelnut spread', wiki: 'Nutella' },
+            { kw: 'jam', wiki: 'Fruit_preserves' },
+
+            // ── SNACKS ──
+            { kw: 'potato chip', wiki: 'Potato_chip' },
+            { kw: 'nacho', wiki: 'Nachos' },
+            { kw: 'tortilla chip', wiki: 'Tortilla_chip' },
+            { kw: 'pretzel', wiki: 'Pretzel' },
+            { kw: 'popcorn', wiki: 'Popcorn' },
+            { kw: 'cheese ball', wiki: 'Cheese_puffs' },
+            { kw: 'rice cracker', wiki: 'Rice_cracker' },
+            { kw: 'chip', wiki: 'Potato_chip' },
+
+            // ── CHOCOLATE ──
+            { kw: 'dark chocolate', wiki: 'Dark_chocolate' },
+            { kw: 'white chocolate', wiki: 'White_chocolate' },
+            { kw: 'milk chocolate', wiki: 'Milk_chocolate' },
+            { kw: 'chocolate caramel', wiki: 'Chocolate_bar' },
+            { kw: 'gummy bear', wiki: 'Gummy_bear' },
+            { kw: 'chewing gum', wiki: 'Chewing_gum' },
+            { kw: 'chocolate', wiki: 'Chocolate' },
+
+            // ── NUTS & DRIED FRUIT ──
+            { kw: 'almond', wiki: 'Almond' },
+            { kw: 'cashew', wiki: 'Cashew' },
+            { kw: 'walnut', wiki: 'Walnut' },
+            { kw: 'pistachio', wiki: 'Pistachio' },
+            { kw: 'raisin', wiki: 'Raisin' },
+            { kw: 'kishmish', wiki: 'Raisin' },
+            { kw: 'dried apricot', wiki: 'Dried_apricot' },
+            { kw: 'date', wiki: 'Date_palm' },
+            { kw: 'chia seed', wiki: 'Chia_seed' },
+            { kw: 'flax seed', wiki: 'Flax' },
+            { kw: 'sunflower seed', wiki: 'Sunflower_seed' },
+            { kw: 'trail mix', wiki: 'Trail_mix' },
+            { kw: 'mixed nut', wiki: 'Mixed_nuts' },
+            { kw: 'protein bar', wiki: 'Energy_bar' },
+            { kw: 'energy bar', wiki: 'Energy_bar' },
+
+            // ── PASTA & NOODLES ──
+            { kw: 'spaghetti', wiki: 'Spaghetti' },
+            { kw: 'macaroni', wiki: 'Macaroni' },
+            { kw: 'penne', wiki: 'Penne' },
+            { kw: 'ramen', wiki: 'Instant_noodles' },
+            { kw: 'noodle', wiki: 'Noodle' },
+            { kw: 'pasta', wiki: 'Pasta' },
+
+            // ── CEREALS ──
+            { kw: 'oat', wiki: 'Oat' },
+            { kw: 'corn flake', wiki: 'Corn_flakes' },
+            { kw: 'muesli', wiki: 'Muesli' },
+            { kw: 'granola', wiki: 'Granola' },
+            { kw: 'quinoa', wiki: 'Quinoa' },
+            { kw: 'millet', wiki: 'Millet' },
+        ];
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 2: Wikipedia API functions
+        // ═══════════════════════════════════════════════════════════
+
+        function findWikiTitle(productName) {
+            const lower = productName.toLowerCase();
+            for (let entry of keywordToWiki) {
+                if (lower.includes(entry.kw)) {
+                    return entry.wiki;
+                }
+            }
+            return null;
+        }
+
+        async function fetchWikiImage(wikiTitle) {
+            try {
+                const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiTitle)}&prop=pageimages&format=json&pithumbsize=400&origin=*`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                
+                if (pageId === '-1' || !pages[pageId].thumbnail) {
+                    return null;
+                }
+                return pages[pageId].thumbnail.source;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 3: Process all products
+        // ═══════════════════════════════════════════════════════════
+
+        async function processAll() {
+            log('Fetching all products from database...', 'info');
+            const snap = await getDocs(collection(db, 'products'));
+            const total = snap.docs.length;
+            log(`Found ${total} products. Starting image fetch...`, 'info');
+            log('─'.repeat(50));
+
+            let updatedCount = 0;
+            let failedCount = 0;
+            let i = 0;
+
+            for (let document of snap.docs) {
+                i++;
+                const product = document.data();
+                const name = product.name;
+                const progress = `[${i}/${total}]`;
+
+                // Find the Wikipedia article
+                const wikiTitle = findWikiTitle(name);
+                
+                if (!wikiTitle) {
+                    log(`${progress} <span class="warn">⚠ No mapping for: ${name}</span>`);
+                    failedCount++;
+                    continue;
+                }
+
+                // Fetch the image from Wikipedia
+                const imageUrl = await fetchWikiImage(wikiTitle);
+                
+                if (imageUrl) {
+                    await updateDoc(doc(db, 'products', document.id), { image: imageUrl });
+                    log(`${progress} <span class="success">✔ ${name}</span> <span class="info">← ${wikiTitle}</span>`);
+                    updatedCount++;
+                } else {
+                    log(`${progress} <span class="warn">⚠ No image on Wikipedia for: ${name} (tried "${wikiTitle}")</span>`);
+                    failedCount++;
+                }
+
+                // Rate limit: 300ms between requests
+                await delay(300);
+            }
+
+            log('─'.repeat(50));
+            log(`<strong style="color:#10b981;">✅ Complete!</strong>`);
+            log(`<strong>Updated: ${updatedCount} | No image found: ${failedCount}</strong>`);
+            log(`<br>Refresh your storefront to see the changes!`);
+        }
+
+        setTimeout(processAll, 1000);
+    </script>
+</body>
+</html>

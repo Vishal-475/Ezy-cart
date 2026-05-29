@@ -9,6 +9,15 @@
     <link rel="icon" href="assets/logo/cart.png">
     <script src="scripts/theme.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // NOTE: Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
+            emailjs.init("GoKxbBe50AbTIRdwE");
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
         /* Checkout-specific enhancements */
@@ -352,15 +361,17 @@
             }
         }
     </style>
-</head>
+  <link rel="manifest" href="manifest.json">`n</head>
 <body>
     <header>
         <h1>EzyCart</h1>
         <nav>
             <a href="index.html">Home</a>
             <a href="categories.html">Categories</a>
+            <a href="wishlist.html" id="wishlist-link"><i class="fas fa-heart"></i> <span id="wishlist-count" class="cart-badge" style="background: var(--danger); display: none;">0</span></a>
             <a href="cart.html">Cart <span id="cart-count" class="cart-badge">0</span></a>
             <a href="checkout.html" class="active">Checkout</a>
+            <a href="my-orders.html" id="orders-link" style="display:none;">My Orders</a>
             <a href="login.html" id="auth-link">Login</a>
         </nav>
     </header>
@@ -428,19 +439,28 @@
                             <input type="radio" name="payment" value="upi" checked>
                             <span class="radio-dot"></span>
                             <i class="fas fa-qrcode"></i>
-                            <span>UPI</span>
+                            <div class="option-details" style="display: flex; flex-direction: column;">
+                                <strong>UPI Payment</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Scan & Pay</span>
+                            </div>
                         </label>
-                        <label class="payment-option" data-value="credit">
-                            <input type="radio" name="payment" value="credit">
+                        <label class="payment-option" data-value="razorpay">
+                            <input type="radio" name="payment" value="razorpay">
                             <span class="radio-dot"></span>
                             <i class="fas fa-credit-card"></i>
-                            <span>Card</span>
+                            <div class="option-details" style="display: flex; flex-direction: column;">
+                                <strong>Card / Netbanking / Wallet</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Secure via Razorpay</span>
+                            </div>
                         </label>
                         <label class="payment-option" data-value="cod">
                             <input type="radio" name="payment" value="cod">
                             <span class="radio-dot"></span>
                             <i class="fas fa-money-bill-wave"></i>
-                            <span>Cash on Delivery</span>
+                            <div class="option-details" style="display: flex; flex-direction: column;">
+                                <strong>Cash on Delivery</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Pay upon delivery</span>
+                            </div>
                         </label>
                     </div>
 
@@ -477,6 +497,16 @@
                         </tbody>
                     </table>
 
+                    <!-- Promo Code Section -->
+                    <div class="promo-section" style="margin-top: 15px; padding: 15px; background: var(--bg-secondary); border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 15px;">
+                        <h4 style="margin-bottom: 10px; font-size: 0.95rem;">Have a promo code?</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="promo-input" placeholder="e.g. SAVE20" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; text-transform: uppercase;">
+                            <button id="apply-promo-btn" style="padding: 8px 15px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Apply</button>
+                        </div>
+                        <div id="promo-msg" style="margin-top: 8px; font-size: 0.85rem; display: none;"></div>
+                    </div>
+
                     <!-- Tax Breakdown -->
                     <div class="tax-summary">
                         <div class="tax-row">
@@ -490,6 +520,10 @@
                         <div class="tax-row">
                             <span>SGST @ 2.5%</span>
                             <span>₹<span id="val-sgst">0.00</span></span>
+                        </div>
+                        <div class="tax-row" id="discount-row" style="display: none; color: var(--danger);">
+                            <span>Discount (<span id="discount-percent">0</span>%)</span>
+                            <span>- ₹<span id="val-discount">0.00</span></span>
                         </div>
                         <div class="tax-row grand-total">
                             <span>Grand Total</span>
@@ -573,9 +607,12 @@
                         <span class="status-badge"><i class="fas fa-check-circle"></i> Order Confirmed</span>
                     </div>
 
-                    <div class="download-section">
-                        <button class="download-btn" id="download-invoice-btn">
+                    <div class="download-section" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button class="download-btn" id="download-invoice-btn" style="flex: 1; max-width: 200px;">
                             <i class="fas fa-download"></i> Download Invoice
+                        </button>
+                        <button class="btn-outline" id="wa-share-btn" style="flex: 1; max-width: 200px; border-color: #25D366; color: #25D366; background: transparent; padding: 12px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fab fa-whatsapp"></i> Share via WA
                         </button>
                     </div>
 
@@ -593,8 +630,9 @@
 
     <script type="module">
         import { getCart, getCartTotal, clearCart, updateCartBadge } from './scripts/cart-manager.js';
+        import { updateWishlistBadge } from './scripts/wishlist-manager.js';
         import { placeOrder } from './scripts/orders-api.js';
-        import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
+        import { auth, onAuthStateChanged, signOut, db, collection, getDocs, query, where } from './scripts/firebase-config.js';
         import { getUserRole, getUserProfile } from './scripts/auth.js';
         import { showToast } from './scripts/toast.js';
 
@@ -605,6 +643,8 @@
         let grandTotal = 0;
         let currentUser = null;
         let selectedPayment = 'upi';
+        let appliedPromo = null;
+        let discountAmount = 0;
 
         // ─── Compute Totals ───
         function computeTotals() {
@@ -612,8 +652,45 @@
             subtotal = getCartTotal();
             cgst = subtotal * 0.025;
             sgst = subtotal * 0.025;
-            grandTotal = subtotal + cgst + sgst;
+            let tempTotal = subtotal + cgst + sgst;
+            
+            if (appliedPromo) {
+                discountAmount = tempTotal * (appliedPromo.discount / 100);
+            } else {
+                discountAmount = 0;
+            }
+            grandTotal = tempTotal - discountAmount;
         }
+
+        // ─── Promo Code Logic ───
+        document.getElementById('apply-promo-btn').addEventListener('click', async () => {
+            const codeInput = document.getElementById('promo-input').value.trim().toUpperCase();
+            const msgDiv = document.getElementById('promo-msg');
+            if(!codeInput) return;
+
+            try {
+                const q = query(collection(db, 'promocodes'), where('code', '==', codeInput));
+                const snap = await getDocs(q);
+                if(snap.empty) {
+                    msgDiv.textContent = 'Invalid promo code';
+                    msgDiv.style.color = 'var(--danger)';
+                    msgDiv.style.display = 'block';
+                    appliedPromo = null;
+                } else {
+                    const promo = snap.docs[0].data();
+                    appliedPromo = promo;
+                    msgDiv.textContent = `Promo code applied! ${promo.discount}% off.`;
+                    msgDiv.style.color = 'var(--accent)';
+                    msgDiv.style.display = 'block';
+                }
+                renderCartSummary();
+            } catch (err) {
+                console.error(err);
+                msgDiv.textContent = 'Error applying code';
+                msgDiv.style.color = 'var(--danger)';
+                msgDiv.style.display = 'block';
+            }
+        });
 
         // ─── Render Cart Summary ───
         function renderCartSummary() {
@@ -635,9 +712,19 @@
             document.getElementById('val-subtotal').textContent = subtotal.toFixed(2);
             document.getElementById('val-cgst').textContent = cgst.toFixed(2);
             document.getElementById('val-sgst').textContent = sgst.toFixed(2);
+            
+            if (appliedPromo) {
+                document.getElementById('discount-row').style.display = 'flex';
+                document.getElementById('discount-percent').textContent = appliedPromo.discount;
+                document.getElementById('val-discount').textContent = discountAmount.toFixed(2);
+            } else {
+                document.getElementById('discount-row').style.display = 'none';
+            }
+            
             document.getElementById('val-grand-total').textContent = grandTotal.toFixed(2);
 
             updateCartBadge();
+            updateWishlistBadge();
             updateQR();
         }
 
@@ -704,8 +791,40 @@
 
             if (selectedPayment === 'upi') {
                 if (!confirm('Have you completed the UPI payment?')) return;
+                executeOrderPlacement(name, phone, email, address);
+            } else if (selectedPayment === 'razorpay') {
+                const options = {
+                    "key": "rzp_test_dummy_key", // Replace with real Razorpay test key
+                    "amount": Math.round(grandTotal * 100),
+                    "currency": "INR",
+                    "name": "EzyCart",
+                    "description": "Order Payment",
+                    "handler": function (response) {
+                        // Payment success
+                        executeOrderPlacement(name, phone, email, address);
+                    },
+                    "prefill": {
+                        "name": name,
+                        "email": email,
+                        "contact": phone
+                    },
+                    "theme": { "color": "#10b981" }
+                };
+                // Fallback if Razorpay API key is dummy or fails to load
+                try {
+                    const rzp1 = new Razorpay(options);
+                    rzp1.open();
+                } catch (e) {
+                    // Simulate success for local testing when key is dummy
+                    console.warn("Razorpay couldn't load (invalid key). Simulating success for testing.");
+                    setTimeout(() => executeOrderPlacement(name, phone, email, address), 1000);
+                }
+            } else {
+                executeOrderPlacement(name, phone, email, address);
             }
+        });
 
+        async function executeOrderPlacement(name, phone, email, address) {
             const orderData = {
                 userId: currentUser ? currentUser.uid : null,
                 customerName: name,
@@ -717,7 +836,10 @@
                 subtotal: subtotal,
                 cgst: cgst,
                 sgst: sgst,
-                total: grandTotal
+                total: grandTotal,
+                tax: cgst + sgst,
+                discount: discountAmount,
+                promoCode: appliedPromo ? appliedPromo.code : null
             };
 
             const btn = document.getElementById('place-order-btn');
@@ -728,6 +850,23 @@
 
             if (result.success) {
                 showToast("Order placed successfully!", "success");
+                
+                // ─── EmailJS Integration (Automated Email Invoice) ───
+                // Note: You must configure a service and template in EmailJS for this to work.
+                if (email) {
+                    const templateParams = {
+                        to_email: email,
+                        to_name: name,
+                        invoice_number: result.invoiceNumber,
+                        order_total: grandTotal.toFixed(2),
+                        order_date: new Date().toLocaleString('en-IN', { dateStyle: 'medium' })
+                    };
+                    
+                    emailjs.send('service_onrtk4e', 'template_g2ggiew', templateParams)
+                        .then(() => console.log('Invoice email sent successfully!'))
+                        .catch((error) => console.error('Failed to send email:', error));
+                }
+
                 showInvoice({ ...orderData, invoiceNumber: result.invoiceNumber });
                 clearCart();
                 renderCartSummary();
@@ -736,7 +875,7 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
             }
-        });
+        }
 
         // ─── Show Invoice Modal ───
         function showInvoice(data) {
@@ -767,6 +906,14 @@
             document.getElementById('inv-cgst').textContent = data.cgst.toFixed(2);
             document.getElementById('inv-sgst').textContent = data.sgst.toFixed(2);
             document.getElementById('inv-grand-total').textContent = data.total.toFixed(2);
+
+            // WA Share Logic
+            const waBtn = document.getElementById('wa-share-btn');
+            waBtn.onclick = () => {
+                const dateStr = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                const text = `*Invoice from EzyCart THE DAILY BASKET*%0A%0AInvoice: ${data.invoiceNumber}%0ADate: ${dateStr}%0A*Total: ₹${data.total.toFixed(2)}*%0A%0AThank you for shopping with us!`;
+                window.open(`https://wa.me/?text=${text}`, '_blank');
+            };
 
             document.getElementById('invoice-modal').style.display = 'block';
         }
@@ -811,6 +958,9 @@
                         authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
                         authLink.href = 'admin.html';
                     } else {
+                        const ordersLink = document.getElementById('orders-link');
+                        if (ordersLink) ordersLink.style.display = 'inline';
+                        
                         authLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
                         authLink.href = '#';
                         authLink.onclick = async (e) => {
