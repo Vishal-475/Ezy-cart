@@ -94,13 +94,43 @@
   </footer>
 
   <script type="module">
-    import { auth, onAuthStateChanged, signOut, db, collection, getDocs } from './scripts/firebase-config.js';
+    import { auth, onAuthStateChanged, signOut, db, collection, getDocs, onSnapshot, query, orderBy } from './scripts/firebase-config.js';
     import { getUserRole } from './scripts/auth.js';
     import { showToast } from './scripts/toast.js';
 
     let salesChart = null;
     let categoryChart = null;
     let attendanceChart = null;
+    let lastKnownOrderCount = 0;
+
+    // ─── Real-time Order Notification Listener ───
+    function startOrderListener() {
+        const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+        onSnapshot(ordersQuery, (snapshot) => {
+            const currentCount = snapshot.size;
+            if (lastKnownOrderCount > 0 && currentCount > lastKnownOrderCount) {
+                const newOrderCount = currentCount - lastKnownOrderCount;
+                showToast(`🔔 ${newOrderCount} new order${newOrderCount > 1 ? 's' : ''} just placed!`, "success");
+                
+                // Browser notification if permitted
+                if (Notification.permission === 'granted') {
+                    new Notification('EzyCart — New Order!', {
+                        body: `You have ${newOrderCount} new order${newOrderCount > 1 ? 's' : ''}. Check the Orders page.`,
+                        icon: 'assets/logo/cart.png'
+                    });
+                }
+                // Refresh the stats
+                loadStats();
+            }
+            lastKnownOrderCount = currentCount;
+            document.getElementById('order-count').textContent = currentCount;
+        });
+
+        // Request browser notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
 
     async function loadStats() {
       try {
@@ -329,6 +359,7 @@
         }, 1500);
       } else {
         loadStats();
+        startOrderListener();
       }
     });
 

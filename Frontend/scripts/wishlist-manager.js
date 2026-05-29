@@ -1,12 +1,23 @@
 // scripts/wishlist-manager.js
 
+let currentUserId = 'guest';
+
+export function setWishlistUser(userId) {
+    currentUserId = userId || 'guest';
+    updateWishlistBadge();
+}
+
+function getStorageKey() {
+    return `ezycart_wishlist_${currentUserId}`;
+}
+
 export function getWishlist() {
-    const list = localStorage.getItem('ezycart_wishlist');
+    const list = localStorage.getItem(getStorageKey());
     return list ? JSON.parse(list) : [];
 }
 
 export function saveWishlist(list) {
-    localStorage.setItem('ezycart_wishlist', JSON.stringify(list));
+    localStorage.setItem(getStorageKey(), JSON.stringify(list));
     updateWishlistBadge();
 }
 

@@ -193,6 +193,58 @@ nav a.active {
   background: rgba(16, 185, 129, 0.12);
 }
 
+/* Global Search Bar */
+.global-search-form {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 8px;
+  position: relative;
+}
+
+.global-search-form input {
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  outline: none;
+  width: 180px;
+  transition: width var(--transition-base), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.global-search-form input::placeholder {
+  color: var(--color-slate-400);
+}
+
+.global-search-form input:focus {
+  width: 240px;
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.12);
+}
+
+.global-search-form button {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-slate-400);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  box-shadow: none;
+}
+
+.global-search-form button:hover {
+  color: var(--accent);
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+
 /* Cart Badge */
 .cart-badge {
   display: inline-flex;
@@ -1110,6 +1162,19 @@ footer a:hover {
   .mobile-menu-toggle {
     display: block;
     margin-left: auto;
+  }
+
+  .global-search-form {
+    margin-left: auto;
+    margin-right: 4px;
+  }
+  .global-search-form input {
+    width: 120px;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+  .global-search-form input:focus {
+    width: 160px;
   }
   
   nav {

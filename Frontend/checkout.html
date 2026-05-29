@@ -793,14 +793,24 @@
                 if (!confirm('Have you completed the UPI payment?')) return;
                 executeOrderPlacement(name, phone, email, address);
             } else if (selectedPayment === 'razorpay') {
+                // ╔═══════════════════════════════════════════════════════════╗
+                // ║  RAZORPAY CONFIGURATION                                  ║
+                // ║  To accept REAL payments, replace the key below with     ║
+                // ║  your LIVE key from https://dashboard.razorpay.com       ║
+                // ║  Test key format: rzp_test_XXXXXX                        ║
+                // ║  Live key format: rzp_live_XXXXXX                        ║
+                // ╚═══════════════════════════════════════════════════════════╝
+                const RAZORPAY_KEY = "rzp_test_dummy_key"; // ← CHANGE THIS
+
                 const options = {
-                    "key": "rzp_test_dummy_key", // Replace with real Razorpay test key
+                    "key": RAZORPAY_KEY,
                     "amount": Math.round(grandTotal * 100),
                     "currency": "INR",
-                    "name": "EzyCart",
+                    "name": "EzyCart — THE DAILY BASKET",
                     "description": "Order Payment",
+                    "image": "assets/logo/cart.png",
                     "handler": function (response) {
-                        // Payment success
+                        // Payment was successful
                         executeOrderPlacement(name, phone, email, address);
                     },
                     "prefill": {
@@ -808,16 +818,29 @@
                         "email": email,
                         "contact": phone
                     },
-                    "theme": { "color": "#10b981" }
+                    "theme": { "color": "#10b981" },
+                    "modal": {
+                        "ondismiss": function() {
+                            showToast("Payment cancelled by user.", "warning");
+                        }
+                    }
                 };
-                // Fallback if Razorpay API key is dummy or fails to load
-                try {
-                    const rzp1 = new Razorpay(options);
-                    rzp1.open();
-                } catch (e) {
-                    // Simulate success for local testing when key is dummy
-                    console.warn("Razorpay couldn't load (invalid key). Simulating success for testing.");
-                    setTimeout(() => executeOrderPlacement(name, phone, email, address), 1000);
+
+                if (RAZORPAY_KEY.includes('dummy')) {
+                    // Demo mode — simulate payment for testing
+                    showToast("Demo mode: Simulating payment success...", "info");
+                    setTimeout(() => executeOrderPlacement(name, phone, email, address), 1500);
+                } else {
+                    try {
+                        const rzp1 = new Razorpay(options);
+                        rzp1.on('payment.failed', function (response) {
+                            showToast("Payment failed: " + response.error.description, "error");
+                        });
+                        rzp1.open();
+                    } catch (e) {
+                        console.error("Razorpay error:", e);
+                        showToast("Payment gateway error. Please try another method.", "error");
+                    }
                 }
             } else {
                 executeOrderPlacement(name, phone, email, address);

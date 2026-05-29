@@ -263,7 +263,7 @@
     <script type="module">
         import { getProductById } from './scripts/products-api.js';
         import { addToCart, updateCartBadge } from './scripts/cart-manager.js';
-        import { toggleWishlist, isInWishlist, updateWishlistBadge } from './scripts/wishlist-manager.js';
+        import { toggleWishlist, isInWishlist, updateWishlistBadge, setWishlistUser } from './scripts/wishlist-manager.js';
         import { auth, onAuthStateChanged, signOut, db, collection, addDoc, getDocs, query, where, orderBy } from './scripts/firebase-config.js';
         import { getUserRole, getUserProfile } from './scripts/auth.js';
         import { showToast } from './scripts/toast.js';
@@ -460,6 +460,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 loggedInUser = user;
+                setWishlistUser(user.uid);
                 document.getElementById('login-to-review-msg').style.display = 'none';
                 document.getElementById('review-form-container').style.display = 'block';
                 
@@ -480,6 +481,7 @@
                     };
                 }
             } else {
+                setWishlistUser('guest');
                 authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                 authLink.href = 'login.html';
                 authLink.onclick = null;

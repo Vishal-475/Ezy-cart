@@ -135,7 +135,7 @@
 
     <script type="module">
         import { updateCartBadge } from './scripts/cart-manager.js';
-        import { updateWishlistBadge } from './scripts/wishlist-manager.js';
+        import { updateWishlistBadge, setWishlistUser } from './scripts/wishlist-manager.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
         import { getUserRole } from './scripts/auth.js';
 
@@ -146,6 +146,7 @@
         const authLink = document.getElementById('auth-link');
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                setWishlistUser(user.uid);
                 const role = await getUserRole(user.uid);
                 if (role === 'admin') {
                     authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
@@ -163,6 +164,7 @@
                     };
                 }
             } else {
+                setWishlistUser('guest');
                 authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                 authLink.href = 'login.html';
                 authLink.onclick = null;

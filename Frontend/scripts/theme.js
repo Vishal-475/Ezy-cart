@@ -48,6 +48,27 @@
             });
         }
 
+        // ─── Global Search Bar (injected into header) ───
+        if (!document.getElementById('global-search-form')) {
+            const searchForm = document.createElement('form');
+            searchForm.id = 'global-search-form';
+            searchForm.className = 'global-search-form';
+            searchForm.innerHTML = `
+                <input type="text" id="global-search-input" placeholder="Search products..." autocomplete="off">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            `;
+            // Insert search form before the mobile-menu-toggle (or at the end of header)
+            headerNav.parentNode.insertBefore(searchForm, menuToggle);
+
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = document.getElementById('global-search-input').value.trim();
+                if (query) {
+                    window.location.href = `categories.html?search=${encodeURIComponent(query)}`;
+                }
+            });
+        }
+
         // Set initial icon
         themeToggle.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
 

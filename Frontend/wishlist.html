@@ -90,7 +90,7 @@
     </footer>
 
     <script type="module">
-        import { getWishlist, toggleWishlist, updateWishlistBadge } from './scripts/wishlist-manager.js';
+        import { getWishlist, toggleWishlist, updateWishlistBadge, setWishlistUser } from './scripts/wishlist-manager.js';
         import { addToCart, updateCartBadge } from './scripts/cart-manager.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
         import { getUserRole } from './scripts/auth.js';
@@ -161,6 +161,10 @@
             if (authLink) {
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
+                        window.setWishlistUser = setWishlistUser;
+                        setWishlistUser(user.uid);
+                        renderWishlist();
+
                         const role = await getUserRole(user.uid);
                         if (role === 'admin') {
                             authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
@@ -178,6 +182,10 @@
                             };
                         }
                     } else {
+                        // User logged out
+                        window.setWishlistUser('guest');
+                        renderWishlist();
+
                         authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                         authLink.href = 'login.html';
                         authLink.onclick = null;

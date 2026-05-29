@@ -98,7 +98,7 @@
     <script type="module">
         import { getAllProducts } from './scripts/products-api.js';
         import { addToCart, updateCartBadge } from './scripts/cart-manager.js';
-        import { toggleWishlist, isInWishlist, updateWishlistBadge } from './scripts/wishlist-manager.js';
+        import { toggleWishlist, isInWishlist, updateWishlistBadge, setWishlistUser } from './scripts/wishlist-manager.js';
         import { auth, onAuthStateChanged, signOut } from './scripts/firebase-config.js';
         import { getUserRole } from './scripts/auth.js';
 
@@ -117,6 +117,14 @@
                 console.error(e);
             }
 
+            // Read ?search= query param from URL (for global search bar)
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
+            if (searchQuery) {
+                document.getElementById('searchBar').value = searchQuery;
+                handleFilter();
+            }
+
             document.getElementById('searchBar').addEventListener('input', handleFilter);
             document.getElementById('categoryFilter').addEventListener('change', handleFilter);
             document.getElementById('sortFilter').addEventListener('change', handleFilter);
@@ -128,6 +136,9 @@
             if (authLink) {
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
+                        setWishlistUser(user.uid);
+                        renderProducts(allProducts); // re-render to update heart icons
+
                         const role = await getUserRole(user.uid);
                         if (role === 'admin') {
                             authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
@@ -145,6 +156,9 @@
                             };
                         }
                     } else {
+                        setWishlistUser('guest');
+                        renderProducts(allProducts);
+
                         authLink.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                         authLink.href = 'login.html';
                         authLink.onclick = null;
